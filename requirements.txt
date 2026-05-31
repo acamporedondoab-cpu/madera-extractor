@@ -1,0 +1,17 @@
+# PDF Extraction (local, no cost)
+pdfplumber==0.10.4
+
+# HTTP requests for Mistral API
+requests==2.31.0
+
+# Flask API server
+Flask==3.0.0
+
+# Production WSGI server (required for Railway deployment)
+gunicorn==21.2.0
+
+# JSON processing
+python-dateutil==2.8.2
+
+# For .env file support (optional, for storing API key safely)
+python-dotenv==1.0.0

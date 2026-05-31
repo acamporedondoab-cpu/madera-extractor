@@ -1,0 +1,199 @@
+{
+  "name": "Javier Quoting System - Email + PDF Extraction",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getLatestEmails",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "credentials": {
+        "gmailOAuth2": "gmail_account"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAttachments",
+        "messageId": "={{ $node['Gmail Trigger'].json.id }}",
+        "options": {
+          "attachmentType": "application/pdf"
+        }
+      },
+      "id": "2",
+      "name": "Extract PDF Attachments",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [300, 300],
+      "credentials": {
+        "gmailOAuth2": "gmail_account"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract email details and attachments\nconst email = $node['Gmail Trigger'].json;\nconst attachments = $node['Extract PDF Attachments'].json;\n\nreturn {\n  from: email.from,\n  subject: email.subject,\n  body: email.snippet,\n  full_body: email.textHtml || email.snippet,\n  received_date: email.internalDate,\n  attachments: attachments,\n  project_id: email.id\n};"
+      },
+      "id": "3",
+      "name": "Format Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/extract",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "email_text",
+              "value": "={{ $node['Format Email Data'].json.full_body }}"
+            },
+            {
+              "name": "pdf_files",
+              "value": "={{ $node['Format Email Data'].json.attachments.map(a => a.filename) }}"
+            },
+            {
+              "name": "project_name",
+              "value": "={{ $node['Format Email Data'].json.project_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4",
+      "name": "Call Extraction API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "oAuth2",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $node['Format Email Data'].json.project_id }}_extraction.json"
+            },
+            {
+              "name": "mimeType",
+              "value": "application/json"
+            },
+            {
+              "name": "content",
+              "value": "={{ JSON.stringify($node['Call Extraction API'].json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5",
+      "name": "Save to Google Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300],
+      "credentials": {
+        "googleOAuth2": "google_drive"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Send confirmation that extraction is complete\nreturn {\n  status: 'success',\n  message: 'Extraction complete',\n  extracted_from: $node['Format Email Data'].json.from,\n  subject: $node['Format Email Data'].json.subject,\n  extraction_result: $node['Call Extraction API'].json,\n  drive_file: $node['Save to Google Drive'].json\n};"
+      },
+      "id": "6",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "respondWithOptions": "allData"
+      },
+      "id": "7",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1300, 300]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Attachments": {
+      "main": [
+        [
+          {
+            "node": "Format Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Email Data": {
+      "main": [
+        [
+          {
+            "node": "Call Extraction API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Extraction API": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null
+}
