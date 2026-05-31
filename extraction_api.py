@@ -283,6 +283,18 @@ def download_excel(extraction_id):
     )
 
 
+@app.route("/api/supabase-status")
+def supabase_status():
+    """Test Supabase connectivity — remove after debugging."""
+    if not supa.is_configured():
+        return jsonify({"configured": False, "error": "SUPABASE_URL or SUPABASE_ANON_KEY not set"})
+    try:
+        rows = supa.list_all()
+        return jsonify({"configured": True, "ok": True, "row_count": len(rows)})
+    except Exception as e:
+        return jsonify({"configured": True, "ok": False, "error": str(e)})
+
+
 @app.route("/debug", methods=["POST", "GET"])
 def debug():
     """Echo back exactly what n8n sends — for troubleshooting only"""
