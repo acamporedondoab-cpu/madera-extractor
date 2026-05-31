@@ -143,7 +143,7 @@ def _compute_totals(ext: dict) -> tuple:
 
 
 def _fmt_eur(amount: float) -> str:
-    return f"EUR {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"EUR {amount:,.2f}"  # international format: EUR 277,000.00
 
 
 def _set_para_text(para, new_text: str):
@@ -199,7 +199,8 @@ def generate_word(extraction_data: Dict[str, Any]) -> bytes:
         offer_date_str = str(offer_date)
 
     # Project fields
-    architect    = project.get("architect") or "—"
+    firm_name    = project.get("architect_firm") or project.get("architect") or "—"
+    arch_contact = project.get("architect") or "—"
     arch_email   = project.get("architect_email") or "—"
     client_name  = project.get("client_name") or "—"
     location     = project.get("location") or "—"
@@ -225,20 +226,27 @@ def generate_word(extraction_data: Dict[str, Any]) -> bytes:
         paras = doc.paragraphs
 
         # ── Zone 1: header fields (P001-P014) ────────────────────────
+        # "To:" block uses architect_firm; "Att.:" block uses person name
         zone1_replacements = {
-            "M+M Arquitectos":          architect,
-            "Laura Martin":             architect,          # contact name same as architect field
-            "Carlos Vega":              "",                 # second contact — clear if unknown
-            "Offer N:042":              f"Offer N:{offer_date.strftime('%Y%m')}",
-            "Garcia Family (private)":  client_name,
+            "M+M Arquitectos":           firm_name,
+            "Laura Martin":              arch_contact,
+            "Carlos Vega":               "",
+            "Garcia Family (private)":   client_name,
             "Carrer Major 18, 08870 Sitges": location,
-            "Sitges 042":               location,
-            "22 May 2026":              offer_date_str,
-            "SUBJECT: Supply and on-site assembly of a wooden-structure villa":
-                f"SUBJECT: Supply and on-site assembly of a {building_type}",
+            "Sitges 042":                location,
+            "22 May 2026":               offer_date_str,
+            "wooden-structure villa":    building_type,
         }
 
+        offer_num = offer_date.strftime('%Y%m')
         for para in paras:
+            full = "".join(r.text for r in para.runs)
+            # Offer N has tabs between label and value — use regex, not exact match
+            if "Offer N:" in full:
+                new_full = re.sub(r'(Offer N:[\s\t]*)(\S+)', rf'\g<1>{offer_num}', full)
+                if new_full != full:
+                    _set_para_text(para, new_full)
+                continue
             for old, new in zone1_replacements.items():
                 _replace_in_para(para, old, new)
 
