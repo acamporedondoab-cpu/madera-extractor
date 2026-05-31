@@ -57,12 +57,15 @@ class MistralExtractor:
         # Call Mistral API
         response = self._call_mistral(prompt)
         
-        # Parse response into JSON
+        # Parse response into JSON — strip markdown code blocks if present
         try:
-            extraction = json.loads(response)
+            clean = response.strip()
+            if clean.startswith("```"):
+                clean = clean.split("```", 2)[-1]  # remove opening ```json
+                clean = clean.rsplit("```", 1)[0]  # remove closing ```
+            extraction = json.loads(clean.strip())
             return extraction
         except json.JSONDecodeError:
-            # If response isn't JSON, extract what we can
             return self._fallback_extraction(combined_text)
     
     def _build_extraction_prompt(self, text: str) -> str:
