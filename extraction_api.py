@@ -204,6 +204,30 @@ def list_extractions():
     return jsonify(result)
 
 
+@app.route("/api/extractions/import", methods=["POST"])
+def import_extraction():
+    """
+    Directly insert a pre-built extraction record into Supabase.
+    Useful for importing records from n8n or other sources.
+
+    Payload: { "id": "project_xxx", "data": { ...full extraction JSON... } }
+    """
+    body = request.get_json(force=True, silent=True) or {}
+    extraction_id = body.get("id")
+    data = body.get("data")
+
+    if not extraction_id or not data:
+        return jsonify({"error": "id and data are required"}), 400
+
+    if supa.is_configured():
+        supa.save(extraction_id, data)
+        return jsonify({"status": "imported", "id": extraction_id})
+    else:
+        filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+        filepath.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        return jsonify({"status": "imported_local", "id": extraction_id})
+
+
 @app.route("/api/extractions/<extraction_id>")
 def get_extraction(extraction_id):
     """Return full extraction JSON for one project."""
