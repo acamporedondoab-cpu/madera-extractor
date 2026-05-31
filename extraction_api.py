@@ -69,15 +69,14 @@ def extract():
 
         if not data.get("email_text"):
             return jsonify({"error": "email_text required"}), 400
-        if not data.get("pdf_attachments") and not data.get("pdf_files"):
-            return jsonify({"error": "pdf_attachments (base64) or pdf_files (local paths) required"}), 400
+        # PDFs are optional — can extract from email text alone
         if not data.get("project_name"):
             return jsonify({"error": "project_name required"}), 400
 
         email_text = data["email_text"]
         project_name = data["project_name"]
 
-        if data.get("pdf_attachments"):
+        if data.get("pdf_attachments"):  # non-empty list
             # Cloud mode: decode base64 PDFs into a temp directory
             temp_dir = tempfile.mkdtemp()
             pdf_file_paths = []
@@ -90,8 +89,8 @@ def extract():
                     f.write(pdf_bytes)
                 pdf_file_paths.append(temp_path)
         else:
-            # Local mode: use file paths directly
-            pdf_file_paths = data["pdf_files"]
+            # Local mode: use file paths directly (may be empty list)
+            pdf_file_paths = data.get("pdf_files") or []
             missing_files = [f for f in pdf_file_paths if not Path(f).exists()]
             if missing_files:
                 return jsonify({
