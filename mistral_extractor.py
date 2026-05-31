@@ -90,7 +90,8 @@ Return ONLY valid JSON (no markdown, no code blocks) with these fields:
     "building_type": "wooden villa, house, etc.",
     "client_name": "full name or 'unknown'",
     "architect": "architect/designer name",
-    "architect_email": "email if available",
+    "architect_email": "email address of the person who sent this request, if available",
+    "sender_phone": "phone number of the sender if present anywhere in email or documents, else null",
     "deadline": "YYYY-MM-DD or null",
     "deadline_days_remaining": "integer or null"
   }},

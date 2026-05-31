@@ -252,7 +252,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
             <div class="det-subtitle" id="detSub">—</div>
           </div>
           <div class="det-actions">
-            <button class="btn btn-blue" onclick="downloadExcel()">↓ Excel</button>
             <button class="btn btn-amber" onclick="openClarify()">? Clarificar</button>
             <button class="btn btn-primary" id="btnApprove" onclick="approveProject()">✓ Aprobar</button>
           </div>
@@ -279,13 +278,29 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 
 <!-- Clarify modal -->
 <div class="modal-overlay" id="clarifyModal" onclick="if(event.target===this)closeClarify()">
-  <div class="modal">
+  <div class="modal" style="width:520px">
     <div class="modal-title">Solicitar Clarificación</div>
-    <div class="modal-desc">Indica qué información falta o qué necesitas aclarar antes de preparar el presupuesto.</div>
-    <textarea class="modal-ta" id="clarifyNote" placeholder="Ej: Necesito el tipo de cimentación y la solución para el vano de 6.4m..."></textarea>
+
+    <!-- Contact card -->
+    <div id="clarifyContact" style="background:var(--bg-primary);border:1px solid var(--border-color);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Contacto</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+          <span style="font-size:15px">✉</span>
+          <span id="clarifyEmail" style="font-family:'DM Sans',sans-serif;color:var(--text-primary)">—</span>
+        </div>
+        <div id="clarifyPhoneRow" style="display:flex;align-items:center;gap:10px;font-size:13px">
+          <span style="font-size:15px">📞</span>
+          <span id="clarifyPhone" style="font-family:'DM Sans',sans-serif;color:var(--text-primary)">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-desc" style="margin-bottom:10px">Redacta el mensaje que quieres enviar al remitente. Se abrirá tu cliente de correo listo para enviar.</div>
+    <textarea class="modal-ta" id="clarifyNote" style="height:130px" placeholder="Ej: Para poder preparar el presupuesto necesito confirmar el tipo de cimentación y la solución para el vano de 6.4m..."></textarea>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeClarify()">Cancelar</button>
-      <button class="btn btn-amber" onclick="submitClarify()">Guardar</button>
+      <button class="btn btn-amber" onclick="submitClarify()">✉ Enviar</button>
     </div>
   </div>
 </div>
@@ -447,6 +462,14 @@ function renderDetail(ext, raw){
   const mf = ext.missing_critical_fields || [];
   const scope = ext.scope || {};
   const cm = ext.commercial_terms || {};
+
+  // Store contact info for the Clarify modal
+  _clarifyProject = {
+    email:        p.architect_email || '',
+    phone:        p.sender_phone    || '',
+    location:     p.location        || '',
+    buildingType: p.building_type   || '',
+  };
 
   // Header
   const loc = p.location || 'Proyecto sin ubicación';
@@ -745,32 +768,62 @@ async function approveProject(){
   }
 }
 
-// ── EXCEL ─────────────────────────────────────────────────────────
-function downloadExcel(){
+// ── CLARIFY ───────────────────────────────────────────────────────
+let _clarifyProject = {};   // {email, phone, location, buildingType}
+
+function openClarify(){
   if(!currentId) return;
-  const a = document.createElement('a');
-  a.href = `/api/extractions/${currentId}/excel`;
-  a.download = `${currentId}_presupuesto.xlsx`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  toast('Descargando Excel...','success');
+  document.getElementById('clarifyModal').classList.add('open');
+
+  // Populate contact card from last-loaded extraction
+  const emailEl   = document.getElementById('clarifyEmail');
+  const phoneEl   = document.getElementById('clarifyPhone');
+  const phoneRow  = document.getElementById('clarifyPhoneRow');
+
+  emailEl.textContent  = _clarifyProject.email || 'Sin email registrado';
+  if(_clarifyProject.phone){
+    phoneEl.textContent = _clarifyProject.phone;
+    phoneRow.style.display = 'flex';
+  } else {
+    phoneRow.style.display = 'none';
+  }
+
+  // Pre-fill template if textarea is empty
+  const ta = document.getElementById('clarifyNote');
+  if(!ta.value.trim()){
+    const proj = _clarifyProject.location || 'el proyecto';
+    const type = _clarifyProject.buildingType || '';
+    ta.value = `Hola,\n\nGracias por vuestra consulta${type ? ' para ' + type : ''} en ${proj}.\n\nPara poder preparar el presupuesto necesito la siguiente información adicional:\n\n- \n\nQuedo a vuestra disposición para cualquier duda.\n\nSaludos,\nJavier`;
+  }
+  ta.focus();
 }
 
-// ── CLARIFY ───────────────────────────────────────────────────────
-function openClarify(){ document.getElementById('clarifyModal').classList.add('open'); document.getElementById('clarifyNote').focus(); }
-function closeClarify(){ document.getElementById('clarifyModal').classList.remove('open'); document.getElementById('clarifyNote').value=''; }
+function closeClarify(){
+  document.getElementById('clarifyModal').classList.remove('open');
+  document.getElementById('clarifyNote').value = '';
+}
+
 async function submitClarify(){
   if(!currentId) return;
   const note = document.getElementById('clarifyNote').value.trim();
-  if(!note){ toast('Escribe una nota primero','warning'); return; }
-  try {
-    await API.post(`/api/extractions/${currentId}/clarify`, {note});
-    closeClarify();
-    toast('Solicitud guardada','success','El proyecto está marcado como "Necesita clarificación".');
-    const card = document.querySelector(`[data-id="${currentId}"] .badge`);
-    if(card){ card.className = 'badge badge-clarify'; card.textContent = 'Clarificar'; }
-  } catch(e){ toast('Error','error',e.message); }
+  if(!note){ toast('Escribe un mensaje primero','warning'); return; }
+
+  const toEmail = _clarifyProject.email || '';
+  const proj    = _clarifyProject.location || currentId;
+
+  // Save to Supabase (mark as clarification_needed)
+  try { await API.post(`/api/extractions/${currentId}/clarify`, {note}); } catch(_){}
+
+  // Open mailto: — browser/OS opens Javier's email client
+  const subject  = encodeURIComponent(`Consulta presupuesto — ${proj}`);
+  const body     = encodeURIComponent(note);
+  const mailto   = `mailto:${toEmail}?subject=${subject}&body=${body}`;
+  window.location.href = mailto;
+
+  closeClarify();
+  toast('Cliente de correo abierto','success','El proyecto queda marcado como "Necesita clarificación".');
+  const card = document.querySelector(`[data-id="${currentId}"] .badge`);
+  if(card){ card.className = 'badge badge-clarify'; card.textContent = 'Clarificar'; }
 }
 
 // ── SAVE MISSING FIELDS ───────────────────────────────────────────
