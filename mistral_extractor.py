@@ -61,8 +61,12 @@ class MistralExtractor:
         try:
             clean = response.strip()
             if clean.startswith("```"):
-                clean = clean.split("```", 2)[-1]  # remove opening ```json
-                clean = clean.rsplit("```", 1)[0]  # remove closing ```
+                # Strip first line (```json or ```) then trailing ```
+                first_newline = clean.find('\n')
+                if first_newline != -1:
+                    clean = clean[first_newline + 1:]
+                if clean.rstrip().endswith("```"):
+                    clean = clean.rstrip()[:-3]
             extraction = json.loads(clean.strip())
             return extraction
         except json.JSONDecodeError:
