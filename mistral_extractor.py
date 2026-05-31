@@ -31,7 +31,7 @@ class MistralExtractor:
                 "or pass api_key parameter"
             )
         
-        self.api_url = "https://api.mistral.ai/v1/messages"
+        self.api_url = "https://api.mistral.ai/v1/chat/completions"
         self.model = "mistral-large-latest"  # Best for reasoning
     
     def extract_quote_data(self, pdf_texts: Dict[str, str], email_text: str) -> Dict[str, Any]:
