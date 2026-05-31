@@ -17,6 +17,7 @@ import requests
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 _TABLE = "extractions"
+_BUCKET = "pdf-attachments"
 
 
 def is_configured() -> bool:
@@ -84,6 +85,25 @@ def get_one(extraction_id: str) -> Optional[dict]:
     r.raise_for_status()
     rows = r.json()
     return rows[0] if rows else None
+
+
+def upload_pdf(project_id: str, filename: str, pdf_bytes: bytes) -> str:
+    """Upload PDF to Supabase Storage bucket. Returns public URL."""
+    path = f"{project_id}/{filename}"
+    url = f"{SUPABASE_URL}/storage/v1/object/{_BUCKET}/{path}"
+    r = requests.post(
+        url,
+        data=pdf_bytes,
+        headers={
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/pdf",
+            "x-upsert": "true",
+        },
+        timeout=30,
+    )
+    r.raise_for_status()
+    return f"{SUPABASE_URL}/storage/v1/object/public/{_BUCKET}/{path}"
 
 
 def update(extraction_id: str, fields: dict) -> bool:

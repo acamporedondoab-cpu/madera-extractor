@@ -189,6 +189,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 .sec-hd{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin:24px 0 10px}
 .sec-hd:first-child{margin-top:0}
 
+/* Docs tab */
+.docs-layout{display:flex;flex-direction:column;gap:12px;height:100%}
+.doc-list{display:flex;flex-wrap:wrap;gap:8px}
+.doc-btn{font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-secondary);font-family:'Inter',sans-serif;font-weight:500;transition:background 0.15s ease,border-color 0.15s ease,color 0.15s ease}
+.doc-btn:hover{background:rgba(76,175,80,0.08);border-color:rgba(76,175,80,0.3);color:var(--text-primary)}
+.doc-btn.active-doc{background:rgba(76,175,80,0.12);border-color:rgba(76,175,80,0.4);color:var(--green-primary)}
+.pdf-frame-wrap{border:1px solid var(--border-color);border-radius:12px;overflow:hidden;background:var(--bg-tertiary);height:680px}
 @media(max-width:900px){.sidebar{width:220px}.g3{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -236,6 +243,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
           <button class="tab-btn" onclick="switchTab('dims',this)">Dimensiones</button>
           <button class="tab-btn" onclick="switchTab('specs',this)">Especificaciones</button>
           <button class="tab-btn" onclick="switchTab('decision',this)">Decisión</button>
+          <button class="tab-btn" onclick="switchTab('docs',this)" id="tabBtnDocs">Documentos</button>
         </nav>
       </div>
 
@@ -244,6 +252,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
         <div class="tab-pane" id="tab-dims"></div>
         <div class="tab-pane" id="tab-specs"></div>
         <div class="tab-pane" id="tab-decision"></div>
+        <div class="tab-pane" id="tab-docs"></div>
       </div>
     </div>
   </main>
@@ -548,6 +557,38 @@ function renderDetail(ext, raw){
       </table>
     </div>`;
 
+  // ── DOCUMENTS ─────────────────────────────────────────────────
+  const attachments = raw.pdf_attachments || [];
+  const tabBtnDocs = document.getElementById('tabBtnDocs');
+  if(attachments.length){
+    tabBtnDocs.textContent = `Documentos (${attachments.length})`;
+    const btnHtml = attachments.map(a =>
+      `<button class="doc-btn" data-name="${esc(a.name)}" onclick="viewPdf('${a.url}','${esc(a.name)}')">${esc(a.name)}</button>`
+    ).join('');
+    document.getElementById('tab-docs').innerHTML = `
+      <div class="docs-layout">
+        <div class="card" style="flex-shrink:0">
+          <div class="card-label">Documentos adjuntos</div>
+          <div class="doc-list">${btnHtml}</div>
+        </div>
+        <div class="pdf-frame-wrap" id="pdfViewer">
+          <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px">
+            Selecciona un documento para verlo
+          </div>
+        </div>
+      </div>`;
+    // Auto-open first PDF
+    setTimeout(() => viewPdf(attachments[0].url, attachments[0].name), 50);
+  } else {
+    tabBtnDocs.textContent = 'Documentos';
+    document.getElementById('tab-docs').innerHTML = `
+      <div class="card" style="text-align:center;padding:40px 24px">
+        <div style="font-size:32px;opacity:0.2;margin-bottom:12px">📎</div>
+        <div style="font-size:13px;color:var(--text-muted)">No hay documentos adjuntos para este proyecto.</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Los PDFs enviados por email aparecerán aquí automáticamente.</div>
+      </div>`;
+  }
+
   // ── DECISION ──────────────────────────────────────────────────
   const missingHtml = mf.length
     ? mf.map(m=>`<div class="missing-item">⚠ ${m}</div>`).join('')
@@ -589,6 +630,17 @@ function renderDetail(ext, raw){
         </div>
       </div>
     </div>`;
+}
+
+// ── DOCUMENTS ────────────────────────────────────────────────────
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function viewPdf(url, name){
+  const viewer = document.getElementById('pdfViewer');
+  if(!viewer) return;
+  document.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active-doc'));
+  const active = document.querySelector(`.doc-btn[data-name="${CSS.escape(name)}"]`);
+  if(active) active.classList.add('active-doc');
+  viewer.innerHTML = `<iframe src="${url}" style="width:100%;height:100%;border:none" title="${esc(name)}"></iframe>`;
 }
 
 // ── APPROVE ───────────────────────────────────────────────────────

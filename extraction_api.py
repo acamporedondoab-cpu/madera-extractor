@@ -80,6 +80,7 @@ def extract():
 
         email_text = data["email_text"]
 
+        stored_pdfs = []  # [{name, url}] populated in cloud mode
         if data.get("pdf_attachments"):  # non-empty list
             # Cloud mode: decode base64 PDFs into a temp directory
             temp_dir = tempfile.mkdtemp()
@@ -92,6 +93,12 @@ def extract():
                 with open(temp_path, "wb") as f:
                     f.write(pdf_bytes)
                 pdf_file_paths.append(temp_path)
+                if supa.is_configured():
+                    try:
+                        url = supa.upload_pdf(project_name, name, pdf_bytes)
+                        stored_pdfs.append({"name": name, "url": url})
+                    except Exception as e:
+                        print(f"⚠ PDF upload failed for {name}: {e}")
         else:
             # Local mode: use file paths directly (may be empty list)
             pdf_file_paths = data.get("pdf_files") or []
@@ -112,6 +119,10 @@ def extract():
             pdf_files=pdf_file_paths,
             project_name=project_name
         )
+
+        # Attach PDF storage URLs so dashboard can show them
+        if stored_pdfs:
+            result["pdf_attachments"] = stored_pdfs
 
         # Persist to Supabase (non-fatal if it fails)
         if supa.is_configured():
