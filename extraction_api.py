@@ -283,49 +283,6 @@ def download_excel(extraction_id):
     )
 
 
-@app.route("/api/supabase-status")
-def supabase_status():
-    """Test Supabase connectivity — remove after debugging."""
-    if not supa.is_configured():
-        return jsonify({"configured": False, "error": "SUPABASE_URL or SUPABASE_ANON_KEY not set"})
-    result = {"configured": True}
-    try:
-        rows = supa.list_all()
-        result["select_ok"] = True
-        result["row_count"] = len(rows)
-    except Exception as e:
-        result["select_ok"] = False
-        result["select_error"] = str(e)
-    try:
-        import requests as _req
-        r = _req.post(
-            f"{supa.SUPABASE_URL}/rest/v1/extractions",
-            json={"id": "__test__", "data": {}, "approved": False, "status": "pending"},
-            headers={
-                "apikey": supa.SUPABASE_KEY,
-                "Authorization": f"Bearer {supa.SUPABASE_KEY}",
-                "Content-Type": "application/json",
-                "Prefer": "resolution=merge-duplicates,return=representation",
-            },
-            timeout=10,
-        )
-        if r.ok:
-            result["insert_ok"] = True
-            # Clean up test row
-            _req.delete(
-                f"{supa.SUPABASE_URL}/rest/v1/extractions",
-                params={"id": "eq.__test__"},
-                headers={"apikey": supa.SUPABASE_KEY, "Authorization": f"Bearer {supa.SUPABASE_KEY}"},
-                timeout=5,
-            )
-        else:
-            result["insert_ok"] = False
-            result["insert_error"] = r.text
-    except Exception as e:
-        result["insert_ok"] = False
-        result["insert_error"] = str(e)
-    return jsonify(result)
-
 
 @app.route("/debug", methods=["POST", "GET"])
 def debug():
