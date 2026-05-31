@@ -84,6 +84,7 @@ Extract ALL available information from the following email and PDF documents:
 Return ONLY valid JSON (no markdown, no code blocks) with these fields:
 
 {{
+  "project_brief": "3-4 sentences in Spanish summarising: who sent the request and from where, what they are building, key dimensions and materials already confirmed, the deadline, and the main open questions Javier must resolve before he can quote. Write it as if briefing Javier cold — he has not read the email.",
   "project": {{
     "location": "city, region or 'unknown'",
     "building_type": "wooden villa, house, etc.",

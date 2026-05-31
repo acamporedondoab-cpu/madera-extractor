@@ -189,6 +189,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 .sec-hd{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin:24px 0 10px}
 .sec-hd:first-child{margin-top:0}
 
+/* Brief card */
+.brief-card{background:rgba(76,175,80,0.06);border:1px solid rgba(76,175,80,0.25);border-left:3px solid var(--green-primary);border-radius:10px;padding:16px 20px;margin-bottom:16px}
+.brief-label{font-size:10px;font-weight:700;color:var(--green-primary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+.brief-text{font-size:14px;color:var(--text-primary);line-height:1.65;font-family:'DM Sans',sans-serif}
+
+/* Email body */
+.email-body{font-size:12px;line-height:1.7;color:var(--text-secondary);font-family:'DM Sans',sans-serif;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;padding-right:4px}
+.email-body::-webkit-scrollbar{width:4px}
+.email-body::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:2px}
+
 /* Docs tab */
 .docs-layout{display:flex;flex-direction:column;gap:12px;height:100%}
 .doc-list{display:flex;flex-wrap:wrap;gap:8px}
@@ -420,7 +430,12 @@ function renderDetail(ext, raw){
   const circ = 2*Math.PI*26;
   const offset = circ - (circ * pct / 100);
 
+  const briefHtml = ext.project_brief
+    ? `<div class="brief-card"><div class="brief-label">Contexto del Proyecto</div><div class="brief-text">${esc(ext.project_brief)}</div></div>`
+    : '';
+
   document.getElementById('tab-overview').innerHTML = `
+    ${briefHtml}
     <div class="g3" style="margin-bottom:16px">
       <div class="card"><div class="card-label">Área Total</div><div class="kpi-val">${d.total_area_m2||'—'}<span class="kpi-unit">m²</span></div></div>
       <div class="card"><div class="card-label">Parcela</div><div class="kpi-val">${d.plot_area_m2||'—'}<span class="kpi-unit">m²</span></div></div>
@@ -559,7 +574,15 @@ function renderDetail(ext, raw){
 
   // ── DOCUMENTS ─────────────────────────────────────────────────
   const attachments = raw.pdf_attachments || [];
+  const emailBody = (raw.source_data || {}).email_text || '';
   const tabBtnDocs = document.getElementById('tabBtnDocs');
+  const emailCard = emailBody
+    ? `<div class="card" style="flex-shrink:0">
+        <div class="card-label">Email original</div>
+        <div class="email-body">${esc(emailBody)}</div>
+      </div>`
+    : '';
+
   if(attachments.length){
     tabBtnDocs.textContent = `Documentos (${attachments.length})`;
     const btnHtml = attachments.map(a =>
@@ -576,16 +599,19 @@ function renderDetail(ext, raw){
             Selecciona un documento para verlo
           </div>
         </div>
+        ${emailCard}
       </div>`;
-    // Auto-open first PDF
     setTimeout(() => viewPdf(attachments[0].url, attachments[0].name), 50);
   } else {
     tabBtnDocs.textContent = 'Documentos';
     document.getElementById('tab-docs').innerHTML = `
-      <div class="card" style="text-align:center;padding:40px 24px">
-        <div style="font-size:32px;opacity:0.2;margin-bottom:12px">📎</div>
-        <div style="font-size:13px;color:var(--text-muted)">No hay documentos adjuntos para este proyecto.</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Los PDFs enviados por email aparecerán aquí automáticamente.</div>
+      <div class="docs-layout">
+        <div class="card" style="text-align:center;padding:40px 24px;flex-shrink:0">
+          <div style="font-size:32px;opacity:0.2;margin-bottom:12px">📎</div>
+          <div style="font-size:13px;color:var(--text-muted)">No hay documentos PDF adjuntos para este proyecto.</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Los PDFs enviados por email aparecerán aquí automáticamente.</div>
+        </div>
+        ${emailCard}
       </div>`;
   }
 
