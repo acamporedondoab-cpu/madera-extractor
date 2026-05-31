@@ -95,13 +95,18 @@ def _compute_totals(ext: dict) -> tuple:
     shutters        = int(_num(wins.get("count"), 0))
     site_months     = 3
 
-    # Large-span beam
+    # Large-span beam — check constraint first (e.g. "6.4m living room span"),
+    # fall back to proposed_solution, then default 8.0m
     large_span_m = 8.0
     for note in struct_notes:
-        m = re.search(r'(\d+(?:\.\d+)?)\s*m\b', note.get("proposed_solution", ""))
-        if m:
-            large_span_m = float(m.group(1))
-            break
+        for field in ("constraint", "proposed_solution"):
+            m = re.search(r'(\d+(?:\.\d+)?)\s*m\b', note.get(field, ""))
+            if m:
+                large_span_m = float(m.group(1))
+                break
+        else:
+            continue
+        break
     std_beam_m = intermediate_slab * 0.18
 
     # Line-item costs

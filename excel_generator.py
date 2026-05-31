@@ -116,13 +116,17 @@ def generate_excel(extraction_data: Dict[str, Any]) -> bytes:
         sched["B16"] = _num(wins.get("count"))
         sched["B17"] = 1  # entrance door default
 
-        # Large-span beam length — parse from structural notes or use default
+        # Large-span beam — check constraint first, fall back to proposed_solution
         large_span_m = 8.0
         for note in struct_notes:
-            m = re.search(r'(\d+(?:\.\d+)?)\s*m\b', note.get("proposed_solution", ""))
-            if m:
-                large_span_m = float(m.group(1))
-                break
+            for field in ("constraint", "proposed_solution"):
+                m = re.search(r'(\d+(?:\.\d+)?)\s*m\b', note.get(field, ""))
+                if m:
+                    large_span_m = float(m.group(1))
+                    break
+            else:
+                continue
+            break
         sched["B25"] = large_span_m
 
         # Force Excel to recalculate all formulas on open
