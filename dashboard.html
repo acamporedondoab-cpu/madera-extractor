@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" translate="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
 <title>Madera — Presupuestos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -445,13 +446,13 @@ function renderDetail(ext, raw){
       <div class="card">
         <div class="card-label">Información del Proyecto</div>
         <table class="dt">
-          <tr><td class="lbl">Ubicación</td><td class="val">${p.location||'—'}</td></tr>
-          <tr><td class="lbl">Cliente</td><td class="val">${cli||'—'}</td></tr>
-          <tr><td class="lbl">Arquitecto</td><td class="val">${p.architect && p.architect!=='unknown'?p.architect:'—'}</td></tr>
-          <tr><td class="lbl">Email</td><td class="val" style="font-size:11px;font-family:'DM Sans',sans-serif">${p.architect_email||'—'}</td></tr>
-          <tr><td class="lbl">Plazo</td><td class="val">${p.deadline||'—'}</td></tr>
-          <tr><td class="lbl">Días restantes</td><td class="val">${p.deadline_days_remaining!=null?p.deadline_days_remaining+' días':'—'}</td></tr>
-          <tr><td class="lbl">Tipo</td><td class="val">${p.building_type||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Ubicación</td><td class="val">${p.location||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Cliente</td><td class="val">${cli||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Arquitecto</td><td class="val">${p.architect && p.architect!=='unknown'?p.architect:'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Email</td><td class="val" style="font-size:11px;font-family:'DM Sans',sans-serif">${p.architect_email||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Plazo</td><td class="val">${p.deadline||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Días restantes</td><td class="val">${p.deadline_days_remaining!=null?p.deadline_days_remaining+' días':'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Tipo de edificio</td><td class="val">${p.building_type||'—'}</td></tr>
         </table>
       </div>
       <div class="card">
