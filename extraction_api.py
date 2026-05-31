@@ -295,6 +295,90 @@ def download_excel(extraction_id):
 
 
 
+def _deep_set(obj: dict, path: str, value) -> None:
+    """Set a value at a dot-separated path inside a nested dict, creating keys as needed."""
+    keys = path.split(".")
+    for key in keys[:-1]:
+        if not isinstance(obj.get(key), dict):
+            obj[key] = {}
+        obj = obj[key]
+    obj[keys[-1]] = value
+
+
+@app.route("/api/extractions/<extraction_id>/fields", methods=["PATCH"])
+def update_fields(extraction_id):
+    """
+    Apply Javier's manual edits for missing fields from the Decision tab.
+
+    Payload:
+      {
+        "patches": [{"path": "technical_specifications.facade.material", "value": "larch"}],
+        "resolved_fields": ["facade material"]   ← field names to drop from missing_critical_fields
+      }
+    """
+    body = request.get_json(force=True, silent=True) or {}
+    patches = body.get("patches", [])
+    resolved = body.get("resolved_fields", [])
+
+    if supa.is_configured():
+        row = supa.get_one(extraction_id)
+        if not row:
+            return jsonify({"error": "Not found"}), 404
+        stored = (row.get("data") or {}).copy()
+    else:
+        filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+        if not filepath.exists():
+            return jsonify({"error": "Not found"}), 404
+        stored = json.loads(filepath.read_text(encoding="utf-8"))
+
+    ext = stored.get("extraction") or {}
+
+    for patch in patches:
+        path = patch.get("path", "")
+        value = patch.get("value")
+        if not path or value is None or value == "":
+            continue
+        if path == "_structural_note_solution":
+            notes = ext.setdefault("structural_notes", [])
+            if notes:
+                notes[0]["proposed_solution"] = str(value)
+                notes[0]["status"] = "resolved"
+            else:
+                notes.append({"constraint": "Vano", "proposed_solution": str(value), "status": "resolved"})
+        elif path.startswith("_unknown."):
+            ext.setdefault("extra_fields", {})[path[9:]] = value
+        else:
+            _deep_set(ext, path, value)
+
+    # Remove resolved fields from missing_critical_fields
+    mf = ext.get("missing_critical_fields") or []
+    resolved_lower = {f.lower() for f in resolved}
+    new_mf = [f for f in mf if f.lower() not in resolved_lower]
+    ext["missing_critical_fields"] = new_mf
+
+    # Boost completeness proportionally
+    total_was_missing = len(new_mf) + len(resolved)
+    if total_was_missing > 0 and resolved:
+        scores = ext.setdefault("confidence_scores", {})
+        old_pct = scores.get("completeness_percent") or 0
+        boost = round(len(resolved) / total_was_missing * (100 - old_pct))
+        scores["completeness_percent"] = min(100, old_pct + boost)
+
+    stored["extraction"] = ext
+
+    if supa.is_configured():
+        supa.update(extraction_id, {"data": stored})
+    else:
+        filepath.write_text(json.dumps(stored, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    scores = ext.get("confidence_scores") or {}
+    return jsonify({
+        "status": "updated",
+        "missing_remaining": len(new_mf),
+        "completeness": scores.get("completeness_percent", 0),
+    })
+
+
 @app.route("/debug", methods=["POST", "GET"])
 def debug():
     """Echo back exactly what n8n sends — for troubleshooting only"""

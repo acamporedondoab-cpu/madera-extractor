@@ -135,6 +135,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 /* Missing field */
 .missing-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.2);border-radius:8px;margin-bottom:8px;font-size:13px;color:#FFC107;font-family:'DM Sans',sans-serif}
 
+/* Editable missing fields form */
+.field-group{margin-bottom:14px}
+.field-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.field-input-row{display:flex;gap:8px;align-items:center}
+.field-input{flex:1;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text-primary);font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s ease}
+.field-input:focus{border-color:var(--green-primary)}
+.field-unit{font-size:12px;color:var(--text-muted);flex-shrink:0;width:28px}
+
 /* Structural note */
 .str-note{padding:14px 16px;background:rgba(244,67,54,0.06);border:1px solid rgba(244,67,54,0.2);border-radius:8px;margin-bottom:8px}
 .str-title{font-size:13px;font-weight:600;color:#F44336;margin-bottom:4px}
@@ -285,6 +293,35 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
+// ── FIELD REGISTRY (missing field name → json path + input config) ────────────
+const FIELD_REG = {
+  "foundation type":              {path:"technical_specifications.foundation.type",              type:"text",   label:"Tipo de cimentación"},
+  "foundation_type":              {path:"technical_specifications.foundation.type",              type:"text",   label:"Tipo de cimentación"},
+  "facade material":              {path:"technical_specifications.facade.material",              type:"text",   label:"Material fachada"},
+  "facade_material":              {path:"technical_specifications.facade.material",              type:"text",   label:"Material fachada"},
+  "internal walls material":      {path:"technical_specifications.internal_walls.material",      type:"text",   label:"Material paredes interiores"},
+  "internal_walls_material":      {path:"technical_specifications.internal_walls.material",      type:"text",   label:"Material paredes interiores"},
+  "roof finish":                  {path:"technical_specifications.roof_finish.type",             type:"text",   label:"Acabado cubierta"},
+  "roof_finish":                  {path:"technical_specifications.roof_finish.type",             type:"text",   label:"Acabado cubierta"},
+  "wall system":                  {path:"technical_specifications.wall_system.material",         type:"text",   label:"Sistema de pared"},
+  "wall_material":                {path:"technical_specifications.wall_system.material",         type:"text",   label:"Sistema de pared"},
+  "wall thickness":               {path:"technical_specifications.wall_system.thickness_mm",     type:"number", unit:"mm",  label:"Espesor pared"},
+  "insulation walls thickness":   {path:"technical_specifications.insulation.walls.thickness_mm",type:"number", unit:"mm",  label:"Espesor aislamiento paredes"},
+  "insulation roof thickness":    {path:"technical_specifications.insulation.roof.thickness_mm", type:"number", unit:"mm",  label:"Espesor aislamiento cubierta"},
+  "roof projected area":          {path:"building_geometry.roof.projected_area_m2",              type:"number", unit:"m²",  label:"Área proyectada cubierta"},
+  "roof_projected_area_m2":       {path:"building_geometry.roof.projected_area_m2",              type:"number", unit:"m²",  label:"Área proyectada cubierta"},
+  "gutter length":                {path:"building_geometry.roof.gutter_length_m",                type:"number", unit:"m",   label:"Longitud canalón"},
+  "gutter_length_m":              {path:"building_geometry.roof.gutter_length_m",                type:"number", unit:"m",   label:"Longitud canalón"},
+  "roof pitch":                   {path:"building_geometry.roof.pitch_degrees",                  type:"number", unit:"°",   label:"Pendiente cubierta"},
+  "window count":                 {path:"building_geometry.windows.count",                       type:"number", unit:"ud.", label:"Número de ventanas"},
+  "window area":                  {path:"building_geometry.windows.total_area_m2",               type:"number", unit:"m²",  label:"Área total ventanas"},
+  "total area":                   {path:"building_dimensions.total_area_m2",                     type:"number", unit:"m²",  label:"Área total"},
+  "plot area":                    {path:"building_dimensions.plot_area_m2",                      type:"number", unit:"m²",  label:"Área parcela"},
+  "6.4m span solution details":   {path:"_structural_note_solution",                             type:"text",   label:"Solución vano 6.4m"},
+  "6.4m_span_solution":           {path:"_structural_note_solution",                             type:"text",   label:"Solución vano 6.4m"},
+  "span solution":                {path:"_structural_note_solution",                             type:"text",   label:"Solución vano estructural"},
+};
+
 // ── API ───────────────────────────────────────────────────────────
 const API = {
   get:  url => fetch(url).then(r => r.json()),
@@ -617,9 +654,27 @@ function renderDetail(ext, raw){
   }
 
   // ── DECISION ──────────────────────────────────────────────────
-  const missingHtml = mf.length
-    ? mf.map(m=>`<div class="missing-item">⚠ ${m}</div>`).join('')
-    : '<div style="font-size:13px;color:#4CAF50;padding:4px 0">✓ Sin campos críticos faltantes</div>';
+  const missingForm = mf.length ? `
+    <form id="missingFieldsForm" onsubmit="saveMissingFields(event)">
+      ${mf.map(fieldName => {
+        const key = fieldName.toLowerCase();
+        const reg = FIELD_REG[key] || {type:'text', label:fieldName, path:`_unknown.${fieldName}`};
+        const isNum = reg.type === 'number';
+        return `<div class="field-group">
+          <div class="field-label">${reg.label}</div>
+          <div class="field-input-row">
+            <input class="field-input" type="${reg.type}" step="${isNum?'any':''}"
+              data-field="${esc(fieldName)}" data-path="${esc(reg.path)}"
+              placeholder="${isNum ? '0' : 'Escribe aquí...'}">
+            ${reg.unit ? `<span class="field-unit">${reg.unit}</span>` : '<span class="field-unit"></span>'}
+          </div>
+        </div>`;
+      }).join('')}
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px;justify-content:center" id="btnSaveFields">
+        Guardar cambios
+      </button>
+    </form>
+  ` : '<div style="font-size:13px;color:#4CAF50;padding:4px 0">✓ Sin campos críticos faltantes</div>';
 
   const structHtml = sn.length
     ? sn.map(n=>`<div class="str-note"><div class="str-title">${n.constraint}</div><div class="str-desc">${n.description||''}</div>${n.proposed_solution?`<div class="str-solution">→ ${n.proposed_solution}</div>`:''}</div>`).join('')
@@ -629,8 +684,9 @@ function renderDetail(ext, raw){
     <div class="g2">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div class="card">
-          <div class="card-label">Campos Faltantes</div>
-          ${missingHtml}
+          <div class="card-label">Campos Faltantes${mf.length ? ` <span style="font-size:10px;color:#FFC107;font-weight:700">(${mf.length} pendientes)</span>` : ''}</div>
+          ${mf.length ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;font-family:\'DM Sans\',sans-serif">Rellena los campos que conoces y haz clic en Guardar.</div>' : ''}
+          ${missingForm}
         </div>
         <div class="card">
           <div class="card-label">Notas Estructurales</div>
@@ -715,6 +771,53 @@ async function submitClarify(){
     const card = document.querySelector(`[data-id="${currentId}"] .badge`);
     if(card){ card.className = 'badge badge-clarify'; card.textContent = 'Clarificar'; }
   } catch(e){ toast('Error','error',e.message); }
+}
+
+// ── SAVE MISSING FIELDS ───────────────────────────────────────────
+async function saveMissingFields(e){
+  e.preventDefault();
+  const btn = document.getElementById('btnSaveFields');
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.disabled = true;
+
+  const inputs = document.querySelectorAll('#missingFieldsForm [data-field]');
+  const patches = [];
+  const resolved = [];
+
+  inputs.forEach(inp => {
+    const raw = inp.value.trim();
+    if(!raw) return;
+    const path = inp.dataset.path;
+    const fieldName = inp.dataset.field;
+    const value = inp.type === 'number' ? parseFloat(raw) : raw;
+    if(inp.type === 'number' && isNaN(value)) return;
+    patches.push({path, value});
+    resolved.push(fieldName);
+  });
+
+  if(!patches.length){
+    toast('Rellena al menos un campo','warning');
+    btn.textContent = 'Guardar cambios';
+    btn.disabled = false;
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/extractions/${currentId}/fields`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({patches, resolved_fields: resolved}),
+    }).then(r => r.json());
+
+    if(res.error){ throw new Error(res.error); }
+    toast('Guardado', 'success', `${resolved.length} campo(s) actualizados · Completitud: ${res.completeness}%`);
+    await loadProject(currentId);
+    loadList();
+  } catch(err){
+    toast('Error al guardar','error', err.message);
+    btn.textContent = 'Guardar cambios';
+    btn.disabled = false;
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
