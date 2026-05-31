@@ -120,12 +120,12 @@
     },
     {
       "parameters": {
-        "respondWithOptions": "allData"
+        "jsCode": "// Log completion — workflow ends here for Gmail trigger\nreturn $input.first().json;"
       },
       "id": "7",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "name": "Done",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [1300, 300]
     }
   ],
@@ -189,7 +189,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Done",
             "type": "main",
             "index": 0
           }
