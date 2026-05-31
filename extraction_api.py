@@ -65,7 +65,7 @@ def extract():
     """
     temp_dir = None
     try:
-        data = request.get_json()
+        data = request.get_json(force=True, silent=True) or request.form.to_dict()
 
         if not data.get("email_text"):
             return jsonify({"error": "email_text required"}), 400
