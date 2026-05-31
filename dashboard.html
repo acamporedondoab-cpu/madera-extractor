@@ -814,16 +814,21 @@ async function submitClarify(){
   // Save to Supabase (mark as clarification_needed)
   try { await API.post(`/api/extractions/${currentId}/clarify`, {note}); } catch(_){}
 
-  // Open mailto: — browser/OS opens Javier's email client
-  const subject  = encodeURIComponent(`Consulta presupuesto — ${proj}`);
-  const body     = encodeURIComponent(note);
-  const mailto   = `mailto:${toEmail}?subject=${subject}&body=${body}`;
-  window.location.href = mailto;
-
+  // Close modal and update UI before opening email client
   closeClarify();
   toast('Cliente de correo abierto','success','El proyecto queda marcado como "Necesita clarificación".');
   const card = document.querySelector(`[data-id="${currentId}"] .badge`);
   if(card){ card.className = 'badge badge-clarify'; card.textContent = 'Clarificar'; }
+
+  // Open mailto: via hidden link — more reliable than location.href across browsers
+  const subject = encodeURIComponent(`Consulta presupuesto — ${proj}`);
+  const body    = encodeURIComponent(note);
+  const a = document.createElement('a');
+  a.href = `mailto:${toEmail}?subject=${subject}&body=${body}`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 500);
 }
 
 // ── SAVE MISSING FIELDS ───────────────────────────────────────────
