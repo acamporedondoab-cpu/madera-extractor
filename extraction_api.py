@@ -15,6 +15,7 @@ import os
 import shutil
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from flask import Flask, request, jsonify
 from extraction_pipeline import QuoteExtractionPipeline
@@ -65,16 +66,18 @@ def extract():
     """
     temp_dir = None
     try:
-        data = request.get_json(force=True, silent=True) or request.form.to_dict()
+        # Try JSON body first, fall back to form data
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            data = request.form.to_dict() or {}
 
         if not data.get("email_text"):
             return jsonify({"error": "email_text required"}), 400
-        # PDFs are optional — can extract from email text alone
-        if not data.get("project_name"):
-            return jsonify({"error": "project_name required"}), 400
+
+        # Auto-generate project_name if not provided
+        project_name = data.get("project_name") or f"project_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         email_text = data["email_text"]
-        project_name = data["project_name"]
 
         if data.get("pdf_attachments"):  # non-empty list
             # Cloud mode: decode base64 PDFs into a temp directory
@@ -124,6 +127,18 @@ def extract():
     finally:
         if temp_dir:
             shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@app.route("/debug", methods=["POST", "GET"])
+def debug():
+    """Echo back exactly what n8n sends — for troubleshooting only"""
+    return jsonify({
+        "json_body": request.get_json(force=True, silent=True),
+        "form_data": request.form.to_dict(),
+        "headers": dict(request.headers),
+        "content_type": request.content_type,
+        "raw_body_preview": request.data.decode("utf-8", errors="replace")[:500]
+    })
 
 
 @app.route("/health", methods=["GET"])
