@@ -14,12 +14,12 @@ import io
 import json
 import os
 import shutil
-import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
 from flask import Flask, request, jsonify, send_file
 from extraction_pipeline import QuoteExtractionPipeline
+import supabase_client as supa
 
 
 app = Flask(__name__)
@@ -113,6 +113,13 @@ def extract():
             project_name=project_name
         )
 
+        # Persist to Supabase (non-fatal if it fails)
+        if supa.is_configured():
+            try:
+                supa.save(project_name, result)
+            except Exception as e:
+                print(f"⚠ Supabase save failed (extraction still returned): {e}")
+
         return jsonify({
             "status": "success",
             "extraction": result,
@@ -139,7 +146,29 @@ def dashboard():
 
 @app.route("/api/extractions")
 def list_extractions():
-    """List all extraction JSON files with summary fields."""
+    """List all extractions (Supabase when configured, local disk fallback)."""
+    if supa.is_configured():
+        rows = supa.list_all()
+        result = []
+        for row in rows:
+            data = row.get("data") or {}
+            ext = data.get("extraction") or {}
+            project = ext.get("project") or {}
+            scores = ext.get("confidence_scores") or {}
+            result.append({
+                "id": row["id"],
+                "location": project.get("location", "Unknown"),
+                "client": project.get("client_name", "Unknown"),
+                "building_type": project.get("building_type", "Unknown"),
+                "deadline": project.get("deadline"),
+                "completeness": scores.get("completeness_percent", 0),
+                "approved": row.get("approved", False),
+                "status": row.get("status", "pending"),
+                "modified": row.get("updated_at") or row.get("created_at"),
+            })
+        return jsonify(result)
+
+    # Local disk fallback
     files = sorted(EXTRACTION_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
     result = []
     for f in files:
@@ -167,6 +196,15 @@ def list_extractions():
 @app.route("/api/extractions/<extraction_id>")
 def get_extraction(extraction_id):
     """Return full extraction JSON for one project."""
+    if supa.is_configured():
+        row = supa.get_one(extraction_id)
+        if not row:
+            return jsonify({"error": "Not found"}), 404
+        result = row.get("data") or {}
+        result["approved"] = row.get("approved", False)
+        result["status"] = row.get("status", "pending")
+        return jsonify(result)
+
     filepath = EXTRACTION_DIR / f"{extraction_id}.json"
     if not filepath.exists():
         return jsonify({"error": "Not found"}), 404
@@ -176,6 +214,13 @@ def get_extraction(extraction_id):
 @app.route("/api/extractions/<extraction_id>/approve", methods=["POST"])
 def approve_extraction(extraction_id):
     """Mark extraction as approved."""
+    if supa.is_configured():
+        row = supa.get_one(extraction_id)
+        if not row:
+            return jsonify({"error": "Not found"}), 404
+        supa.update(extraction_id, {"approved": True, "status": "approved"})
+        return jsonify({"status": "approved", "id": extraction_id})
+
     filepath = EXTRACTION_DIR / f"{extraction_id}.json"
     if not filepath.exists():
         return jsonify({"error": "Not found"}), 404
@@ -190,13 +235,25 @@ def approve_extraction(extraction_id):
 @app.route("/api/extractions/<extraction_id>/clarify", methods=["POST"])
 def clarify_extraction(extraction_id):
     """Flag extraction as needing clarification."""
+    body = request.get_json(force=True, silent=True) or {}
+    note = body.get("note", "")
+
+    if supa.is_configured():
+        row = supa.get_one(extraction_id)
+        if not row:
+            return jsonify({"error": "Not found"}), 404
+        updated_data = (row.get("data") or {}).copy()
+        updated_data["clarification_note"] = note
+        updated_data["clarification_at"] = datetime.now().isoformat()
+        supa.update(extraction_id, {"status": "clarification_needed", "data": updated_data})
+        return jsonify({"status": "clarification_needed", "id": extraction_id})
+
     filepath = EXTRACTION_DIR / f"{extraction_id}.json"
     if not filepath.exists():
         return jsonify({"error": "Not found"}), 404
-    body = request.get_json(force=True, silent=True) or {}
     data = json.loads(filepath.read_text(encoding="utf-8"))
     data["status"] = "clarification_needed"
-    data["clarification_note"] = body.get("note", "")
+    data["clarification_note"] = note
     data["clarification_at"] = datetime.now().isoformat()
     filepath.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     return jsonify({"status": "clarification_needed", "id": extraction_id})
@@ -205,11 +262,18 @@ def clarify_extraction(extraction_id):
 @app.route("/api/extractions/<extraction_id>/excel")
 def download_excel(extraction_id):
     """Generate and return Excel workbook for an extraction."""
-    filepath = EXTRACTION_DIR / f"{extraction_id}.json"
-    if not filepath.exists():
-        return jsonify({"error": "Not found"}), 404
+    if supa.is_configured():
+        row = supa.get_one(extraction_id)
+        if not row:
+            return jsonify({"error": "Not found"}), 404
+        data = row.get("data") or {}
+    else:
+        filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+        if not filepath.exists():
+            return jsonify({"error": "Not found"}), 404
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+
     from excel_generator import generate_excel
-    data = json.loads(filepath.read_text(encoding="utf-8"))
     excel_bytes = generate_excel(data)
     return send_file(
         io.BytesIO(excel_bytes),
