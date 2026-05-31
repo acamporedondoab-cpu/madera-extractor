@@ -48,14 +48,24 @@
         "url": "https://web-production-2e131.up.railway.app/extract",
         "authentication": "none",
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"email_text\": \"{{ $node['Format Email Data'].json.full_body }}\",\n  \"pdf_attachments\": {{ JSON.stringify($node['Format Email Data'].json.pdf_attachments) }},\n  \"project_name\": \"{{ $node['Format Email Data'].json.project_id }}\"\n}",
-        "options": {
-          "response": {
-            "response": {
-              "fullResponse": false
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "email_text",
+              "value": "={{ $node['Format Email Data'].json.full_body }}"
+            },
+            {
+              "name": "pdf_attachments",
+              "value": "={{ $node['Format Email Data'].json.pdf_attachments }}"
+            },
+            {
+              "name": "project_name",
+              "value": "={{ $node['Format Email Data'].json.project_id }}"
             }
-          },
+          ]
+        },
+        "options": {
           "timeout": 60000
         }
       },
