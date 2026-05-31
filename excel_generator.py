@@ -125,6 +125,8 @@ def generate_excel(extraction_data: Dict[str, Any]) -> bytes:
                 break
         sched["B25"] = large_span_m
 
+        # Force Excel to recalculate all formulas on open
+        wb.calculation.fullCalcOnLoad = True
         wb.save(tmp_path)
         return Path(tmp_path).read_bytes()
 

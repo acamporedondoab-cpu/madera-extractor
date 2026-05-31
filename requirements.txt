@@ -18,3 +18,6 @@ python-dotenv==1.0.0
 
 # Excel generation for approved quotes
 openpyxl==3.1.2
+
+# Word document generation for final offer
+python-docx==1.1.2
