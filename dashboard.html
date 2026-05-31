@@ -87,6 +87,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 .btn-amber:hover{filter:brightness(1.15)}
 .btn-blue{background:rgba(33,150,243,0.12);color:#2196F3;border:1px solid rgba(33,150,243,0.3)}
 .btn-blue:hover{filter:brightness(1.15)}
+.btn-teal{background:rgba(0,188,212,0.12);color:#00BCD4;border:1px solid rgba(0,188,212,0.3)}
+.btn-teal:hover{filter:brightness(1.15)}
 
 /* Tabs */
 .tab-nav{display:flex}
@@ -252,6 +254,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
             <div class="det-subtitle" id="detSub">—</div>
           </div>
           <div class="det-actions">
+            <a id="btnExcel"  class="btn btn-blue"    style="display:none;text-decoration:none" download>↓ Excel</a>
+            <a id="btnWord"   class="btn btn-teal"    style="display:none;text-decoration:none" download>↓ Oferta Word</a>
             <button class="btn btn-amber" onclick="openClarify()">? Clarificar</button>
             <button class="btn btn-primary" id="btnApprove" onclick="approveProject()">✓ Aprobar</button>
           </div>
@@ -481,8 +485,10 @@ function renderDetail(ext, raw){
   const btn = document.getElementById('btnApprove');
   if(raw.approved){
     btn.textContent = '✓ Aprobado'; btn.disabled = true;
+    _showDownloadButtons(currentId);
   } else {
     btn.textContent = '✓ Aprobar'; btn.disabled = false;
+    _hideDownloadButtons();
   }
 
   // ── OVERVIEW ──────────────────────────────────────────────────
@@ -749,6 +755,21 @@ function viewPdf(url, name){
   viewer.innerHTML = `<iframe src="${url}" style="width:100%;height:100%;border:none" title="${esc(name)}"></iframe>`;
 }
 
+// ── DOWNLOAD HELPERS ──────────────────────────────────────────────
+function _showDownloadButtons(id){
+  const API_BASE = 'https://madera-qoutation-system.up.railway.app';
+  const excel = document.getElementById('btnExcel');
+  const word  = document.getElementById('btnWord');
+  excel.href = `${API_BASE}/api/extractions/${id}/excel`;
+  word.href  = `${API_BASE}/api/extractions/${id}/word`;
+  excel.style.display = '';
+  word.style.display  = '';
+}
+function _hideDownloadButtons(){
+  document.getElementById('btnExcel').style.display = 'none';
+  document.getElementById('btnWord').style.display  = 'none';
+}
+
 // ── APPROVE ───────────────────────────────────────────────────────
 async function approveProject(){
   if(!currentId) return;
@@ -757,8 +778,9 @@ async function approveProject(){
   btn.disabled = true;
   try {
     await API.post(`/api/extractions/${currentId}/approve`, {});
-    toast('Proyecto aprobado','success','Haz clic en "↓ Excel" para descargar el resumen.');
+    toast('Proyecto aprobado','success','Descarga el Excel y la Oferta Word con los botones de arriba.');
     btn.textContent = '✓ Aprobado';
+    _showDownloadButtons(currentId);
     const card = document.querySelector(`[data-id="${currentId}"] .badge`);
     if(card){ card.className = 'badge badge-approved'; card.textContent = 'Aprobado'; }
   } catch(e){

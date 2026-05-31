@@ -294,6 +294,29 @@ def download_excel(extraction_id):
     )
 
 
+@app.route("/api/extractions/<extraction_id>/word")
+def download_word(extraction_id):
+    """Generate and return the filled final_offer.docx for an extraction."""
+    if supa.is_configured():
+        row = supa.get_one(extraction_id)
+        if not row:
+            return jsonify({"error": "Not found"}), 404
+        data = row.get("data") or {}
+    else:
+        filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+        if not filepath.exists():
+            return jsonify({"error": "Not found"}), 404
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+
+    from word_generator import generate_word
+    word_bytes = generate_word(data)
+    return send_file(
+        io.BytesIO(word_bytes),
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        as_attachment=True,
+        download_name=f"{extraction_id}_oferta_final.docx",
+    )
+
 
 def _deep_set(obj: dict, path: str, value) -> None:
     """Set a value at a dot-separated path inside a nested dict, creating keys as needed."""
