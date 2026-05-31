@@ -45,7 +45,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://web-production-2e131.up.railway.app/extract",
+        "url": "https://madera-qoutation-system.up.railway.app/extract",
         "authentication": "none",
         "sendBody": true,
         "specifyBody": "keypair",

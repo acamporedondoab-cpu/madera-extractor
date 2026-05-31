@@ -367,14 +367,14 @@ curl http://localhost:5000/health
    3. Upload your F:\Madera folder (or connect GitHub)
    4. Set environment variable: MISTRAL_API_KEY=your-key
    5. Deploy
-   6. Get public URL: https://your-project.railway.app
+   6. Get public URL: https://madera-qoutation-system.up.railway.app
    ```
 
 2. **Update n8n workflow with new API URL**
    ```
    In n8n Cloud:
    1. Click HTTP Request node
-   2. Change URL to: https://your-project.railway.app/extract
+   2. Change URL to: https://madera-qoutation-system.up.railway.app/extract
    3. Save & test
    ```
 
