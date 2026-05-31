@@ -34,7 +34,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract email details and attachments\nconst email = $node['Gmail Trigger'].json;\nconst attachments = $node['Extract PDF Attachments'].json;\n\nreturn {\n  from: email.from,\n  subject: email.subject,\n  body: email.snippet,\n  full_body: email.textHtml || email.snippet,\n  received_date: email.internalDate,\n  attachments: attachments,\n  project_id: email.id\n};"
+        "jsCode": "// Extract email details and build pdf_attachments as base64 for Railway API\nconst email = $node['Gmail Trigger'].json;\nconst items = $input.all();\n\nconst pdfAttachments = items\n  .map(item => {\n    const binaryKey = Object.keys(item.binary || {})[0];\n    if (!binaryKey) return null;\n    return {\n      name: item.binary[binaryKey].fileName || 'attachment.pdf',\n      content: item.binary[binaryKey].data\n    };\n  })\n  .filter(Boolean);\n\nreturn {\n  from: email.from,\n  subject: email.subject,\n  full_body: email.snippet,\n  project_id: email.id,\n  pdf_attachments: pdfAttachments\n};"
       },
       "id": "3",
       "name": "Format Email Data",
@@ -45,26 +45,19 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:5000/extract",
+        "url": "https://web-production-2e131.up.railway.app/extract",
         "authentication": "none",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "email_text",
-              "value": "={{ $node['Format Email Data'].json.full_body }}"
-            },
-            {
-              "name": "pdf_files",
-              "value": "={{ $node['Format Email Data'].json.attachments.map(a => a.filename) }}"
-            },
-            {
-              "name": "project_name",
-              "value": "={{ $node['Format Email Data'].json.project_id }}"
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email_text\": \"{{ $node['Format Email Data'].json.full_body }}\",\n  \"pdf_attachments\": {{ JSON.stringify($node['Format Email Data'].json.pdf_attachments) }},\n  \"project_name\": \"{{ $node['Format Email Data'].json.project_id }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
             }
-          ]
-        },
-        "options": {}
+          },
+          "timeout": 60000
+        }
       },
       "id": "4",
       "name": "Call Extraction API",
