@@ -71,17 +71,18 @@ def _compute_totals(ext: dict) -> tuple:
 
     # Per-floor arrays for SUMPRODUCT
     floor_height = 2.8  # default from Parameters sheet
+    attic_height = _num(g2.get("height_m"), 1.5)
     perimeters = [
         _num(g0.get("ext_perimeter_m")),
         _num(g1.get("ext_perimeter_m")),
-        _num(g2.get("area_m2")) and 0,  # attic perimeter often not extracted
+        _num(g2.get("ext_perimeter_m")),
     ]
     int_lengths = [
         _num(g0.get("int_walls_length_m")),
         _num(g1.get("int_walls_length_m")),
         0,
     ]
-    heights = [floor_height, floor_height, 1.5]
+    heights = [floor_height, floor_height, attic_height]
 
     ext_wall_m2     = sum(p * h for p, h in zip(perimeters, heights))
     int_wall_m2     = sum(l * h for l, h in zip(int_lengths, heights))

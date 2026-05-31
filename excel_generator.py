@@ -85,9 +85,13 @@ def generate_excel(extraction_data: Dict[str, Any]) -> bytes:
         vat = _num(commercial.get("vat_rate_percent"), 21) / 100
         params["B5"] = round(vat, 4)              # e.g. 0.21
 
+        params["B7"] = 2.8                        # standard floor height (m)
         params["B8"] = _num(wall_sys.get("thickness_mm"), 140)
         params["B10"] = _num(ins_walls.get("thickness_mm"), 200)
         params["B11"] = _num(ins_roof.get("thickness_mm"), 240)
+        params["B12"] = 0.3                       # terrace coefficient
+        params["B13"] = 0.0                       # roof coefficient
+        params["B14"] = 3                         # site duration (months)
 
         # ── Schedule sheet — green input cells ───────────────────────
         sched = wb["Schedule"]
@@ -106,6 +110,8 @@ def generate_excel(extraction_data: Dict[str, Any]) -> bytes:
 
         # P2 Attic
         sched["B7"] = _num(attic.get("area_m2") or dims.get("attic_area_m2"))
+        sched["D7"] = _num(attic.get("ext_perimeter_m"), 0)
+        sched["F7"] = _num(attic.get("height_m"), 1.5)
 
         # Roof
         sched["B11"] = _num(roof.get("projected_area_m2"))
