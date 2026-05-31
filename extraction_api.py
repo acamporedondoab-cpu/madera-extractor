@@ -10,6 +10,7 @@ Then n8n workflow calls: http://localhost:5000/extract
 """
 
 import base64
+import io
 import json
 import os
 import shutil
@@ -17,7 +18,7 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from extraction_pipeline import QuoteExtractionPipeline
 
 
@@ -127,6 +128,95 @@ def extract():
     finally:
         if temp_dir:
             shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@app.route("/dashboard")
+def dashboard():
+    """Serve the validation dashboard."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dashboard.html")
+    return send_file(path)
+
+
+@app.route("/api/extractions")
+def list_extractions():
+    """List all extraction JSON files with summary fields."""
+    files = sorted(EXTRACTION_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
+    result = []
+    for f in files:
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            ext = data.get("extraction") or {}
+            project = ext.get("project") or {}
+            scores = ext.get("confidence_scores") or {}
+            result.append({
+                "id": f.stem,
+                "location": project.get("location", "Unknown"),
+                "client": project.get("client_name", "Unknown"),
+                "building_type": project.get("building_type", "Unknown"),
+                "deadline": project.get("deadline"),
+                "completeness": scores.get("completeness_percent", 0),
+                "approved": data.get("approved", False),
+                "status": data.get("status", "pending"),
+                "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
+            })
+        except Exception:
+            pass
+    return jsonify(result)
+
+
+@app.route("/api/extractions/<extraction_id>")
+def get_extraction(extraction_id):
+    """Return full extraction JSON for one project."""
+    filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+    if not filepath.exists():
+        return jsonify({"error": "Not found"}), 404
+    return jsonify(json.loads(filepath.read_text(encoding="utf-8")))
+
+
+@app.route("/api/extractions/<extraction_id>/approve", methods=["POST"])
+def approve_extraction(extraction_id):
+    """Mark extraction as approved."""
+    filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+    if not filepath.exists():
+        return jsonify({"error": "Not found"}), 404
+    data = json.loads(filepath.read_text(encoding="utf-8"))
+    data["approved"] = True
+    data["approved_at"] = datetime.now().isoformat()
+    data["status"] = "approved"
+    filepath.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    return jsonify({"status": "approved", "id": extraction_id})
+
+
+@app.route("/api/extractions/<extraction_id>/clarify", methods=["POST"])
+def clarify_extraction(extraction_id):
+    """Flag extraction as needing clarification."""
+    filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+    if not filepath.exists():
+        return jsonify({"error": "Not found"}), 404
+    body = request.get_json(force=True, silent=True) or {}
+    data = json.loads(filepath.read_text(encoding="utf-8"))
+    data["status"] = "clarification_needed"
+    data["clarification_note"] = body.get("note", "")
+    data["clarification_at"] = datetime.now().isoformat()
+    filepath.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    return jsonify({"status": "clarification_needed", "id": extraction_id})
+
+
+@app.route("/api/extractions/<extraction_id>/excel")
+def download_excel(extraction_id):
+    """Generate and return Excel workbook for an extraction."""
+    filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+    if not filepath.exists():
+        return jsonify({"error": "Not found"}), 404
+    from excel_generator import generate_excel
+    data = json.loads(filepath.read_text(encoding="utf-8"))
+    excel_bytes = generate_excel(data)
+    return send_file(
+        io.BytesIO(excel_bytes),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=f"{extraction_id}_presupuesto.xlsx",
+    )
 
 
 @app.route("/debug", methods=["POST", "GET"])

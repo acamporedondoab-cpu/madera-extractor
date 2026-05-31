@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Madera — Presupuestos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary:#121212; --bg-card:#1E1E1E; --bg-sidebar:#1A1A1A;
+  --bg-tertiary:#252525; --border-color:#2A2A2A;
+  --text-primary:#FFFFFF; --text-secondary:#B0B0B0; --text-muted:#6B6B6B;
+  --green-primary:#4CAF50; --green-dark:#388E3C; --green-deeper:#2E7D32;
+  --amber:#FFC107; --red:#F44336; --blue:#2196F3;
+  --sk-base:#252525; --sk-shine:#383838;
+}
+body.light {
+  --bg-primary:#F5F5F5; --bg-card:#FFFFFF; --bg-tertiary:#EBEBEB;
+  --border-color:#E0E0E0; --text-primary:#111111;
+  --text-secondary:#555555; --text-muted:#999999;
+  --sk-base:#EBEBEB; --sk-shine:#DCDCDC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--text-primary);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* Header */
+.hdr{background:var(--bg-sidebar);border-bottom:1px solid #333;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hdr-logo{width:28px;height:28px;background:var(--green-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.hdr-title{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+.theme-btn{width:36px;height:36px;border:1px solid #444;border-radius:8px;background:transparent;cursor:pointer;font-size:16px;color:#fff;transition:background 0.15s ease,border-color 0.15s ease}
+.theme-btn:hover{background:rgba(255,255,255,0.08);border-color:#666}
+
+/* Layout */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* Sidebar */
+.sidebar{width:272px;flex-shrink:0;background:var(--bg-sidebar);border-right:1px solid #333;display:flex;flex-direction:column;overflow:hidden}
+.sb-header{padding:16px;border-bottom:1px solid #333;flex-shrink:0}
+.sb-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px}
+.sb-list{flex:1;overflow-y:auto;padding:8px}
+.sb-list::-webkit-scrollbar{width:4px}
+.sb-list::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+
+/* Project cards in sidebar */
+.proj-card{padding:12px;border-radius:8px;cursor:pointer;margin-bottom:4px;border:1px solid transparent;transition:background 0.15s ease,border-color 0.15s ease}
+.proj-card:hover{background:rgba(255,255,255,0.06)}
+.proj-card.active{background:rgba(76,175,80,0.1);border-color:rgba(76,175,80,0.3)}
+.proj-name{font-size:13px;font-weight:600;color:rgba(255,255,255,0.9);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-meta{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'JetBrains Mono',monospace}
+.prog-bar{height:3px;background:#333;border-radius:2px;overflow:hidden;margin-bottom:6px}
+.prog-fill{height:100%;border-radius:2px;transition:width 0.4s ease}
+
+/* Badges */
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;letter-spacing:0.04em;text-transform:uppercase}
+.badge-approved{background:rgba(76,175,80,0.15);color:#4CAF50}
+.badge-pending{background:rgba(255,193,7,0.15);color:#FFC107}
+.badge-clarify{background:rgba(244,67,54,0.15);color:#F44336}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted)}
+.empty-icon{font-size:48px;opacity:0.25;margin-bottom:16px}
+.empty-text{font-size:14px}
+
+/* Detail */
+.detail{display:none;flex-direction:column;height:100%;overflow:hidden}
+.detail.visible{display:flex}
+
+.det-header{padding:20px 24px 0;border-bottom:1px solid var(--border-color);flex-shrink:0}
+.det-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:16px}
+.det-title{font-size:20px;font-weight:700}
+.det-subtitle{font-size:13px;color:var(--text-secondary);margin-top:3px;font-family:'DM Sans',sans-serif}
+.det-actions{display:flex;gap:8px;flex-shrink:0}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:transform 0.15s ease,filter 0.15s ease,box-shadow 0.15s ease;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{transform:scale(1.025)}
+.btn:active{transform:scale(0.96)}
+.btn:disabled{opacity:0.6;cursor:default;transform:none}
+.btn-primary{background:var(--green-primary);color:#fff}
+.btn-primary:hover:not(:disabled){filter:brightness(1.15);box-shadow:0 4px 12px rgba(76,175,80,0.3)}
+.btn-ghost{background:transparent;color:var(--text-secondary);border:1px solid var(--border-color)}
+.btn-ghost:hover{filter:brightness(1.2);border-color:var(--text-secondary)}
+.btn-amber{background:rgba(255,193,7,0.12);color:#FFC107;border:1px solid rgba(255,193,7,0.3)}
+.btn-amber:hover{filter:brightness(1.15)}
+.btn-blue{background:rgba(33,150,243,0.12);color:#2196F3;border:1px solid rgba(33,150,243,0.3)}
+.btn-blue:hover{filter:brightness(1.15)}
+
+/* Tabs */
+.tab-nav{display:flex}
+.tab-btn{padding:10px 20px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:'Inter',sans-serif;transition:color 0.15s ease,border-color 0.15s ease}
+.tab-btn:hover{color:var(--text-secondary)}
+.tab-btn.active{color:var(--green-primary);border-bottom-color:var(--green-primary)}
+
+/* Content */
+.tab-content{flex:1;overflow-y:auto;padding:24px}
+.tab-content::-webkit-scrollbar{width:6px}
+.tab-content::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:3px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* Cards */
+.card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.2),0 4px 12px rgba(0,0,0,0.3)}
+.card-label{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* KPI card */
+.kpi-val{font-size:30px;font-weight:700;line-height:1}
+.kpi-unit{font-size:13px;color:var(--text-muted);margin-left:4px}
+
+/* Data table */
+.dt{width:100%;border-collapse:collapse}
+.dt th{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-color)}
+.dt td{font-size:13px;padding:9px 10px;border-bottom:1px solid var(--border-color);font-family:'DM Sans',sans-serif}
+.dt tr:last-child td{border-bottom:none}
+.dt td.lbl{color:var(--text-secondary)}
+.dt td.val{font-weight:600;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-primary)}
+.dt tr.total td{border-top:2px solid var(--border-color);font-weight:700;color:var(--green-primary)}
+.dt th.section{color:var(--green-primary);background:rgba(76,175,80,0.06);font-size:10px}
+
+/* Status dot */
+.sdot{display:inline-flex;align-items:center;gap:5px;font-size:12px}
+.sdot::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sdot-confirmed::before{background:#4CAF50}
+.sdot-suggested::before{background:#FFC107}
+.sdot-unknown::before{background:#6B6B6B}
+.sdot-flagged::before{background:#F44336;animation:pdot 2s ease-in-out infinite}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* Missing field */
+.missing-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.2);border-radius:8px;margin-bottom:8px;font-size:13px;color:#FFC107;font-family:'DM Sans',sans-serif}
+
+/* Structural note */
+.str-note{padding:14px 16px;background:rgba(244,67,54,0.06);border:1px solid rgba(244,67,54,0.2);border-radius:8px;margin-bottom:8px}
+.str-title{font-size:13px;font-weight:600;color:#F44336;margin-bottom:4px}
+.str-desc{font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-family:'DM Sans',sans-serif}
+.str-solution{font-size:12px;color:var(--text-muted);font-style:italic;font-family:'DM Sans',sans-serif}
+
+/* Scope list */
+.scope-list{list-style:none}
+.scope-list li{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);font-family:'DM Sans',sans-serif}
+.scope-list li:last-child{border-bottom:none}
+.scope-list li::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.scope-in li::before{background:#4CAF50}
+.scope-out li::before{background:#F44336}
+
+/* Confidence ring */
+.ring-wrap{position:relative;width:60px;height:60px;flex-shrink:0}
+.ring-svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--border-color);stroke-width:5}
+.ring-fg{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 0.6s ease}
+.ring-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.2s ease}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;padding:28px;width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:translateY(8px);transition:transform 0.2s ease}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.modal-desc{font-size:13px;color:var(--text-secondary);margin-bottom:20px;font-family:'DM Sans',sans-serif}
+.modal-ta{width:100%;height:100px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;padding:12px;font-size:13px;color:var(--text-primary);font-family:'DM Sans',sans-serif;resize:none;outline:none;transition:border-color 0.2s ease}
+.modal-ta:focus{border-color:var(--green-primary)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:14px 16px;min-width:280px;max-width:360px;box-shadow:0 2px 6px rgba(0,0,0,0.2),0 8px 24px rgba(0,0,0,0.32);transform:translateX(120%);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);overflow:hidden;position:relative}
+.toast.show{transform:translateX(0)}
+.toast-hdr{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.toast-title{font-size:13px;font-weight:600;letter-spacing:-0.01em}
+.toast-msg{font-size:12px;color:var(--text-secondary);font-family:'DM Sans',sans-serif}
+.toast-prog{position:absolute;bottom:0;left:0;height:2px;transform-origin:left}
+.toast-success .toast-prog{background:#4CAF50}
+.toast-error .toast-prog{background:#F44336}
+.toast-warning .toast-prog{background:#FFC107}
+
+/* Spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Null */
+.nil{color:var(--text-muted);font-style:italic;font-size:12px}
+
+/* Section heading */
+.sec-hd{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin:24px 0 10px}
+.sec-hd:first-child{margin-top:0}
+
+@media(max-width:900px){.sidebar{width:220px}.g3{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">
+    <div class="hdr-logo">M</div>
+    Madera — Sistema de Presupuestos
+  </div>
+  <button class="theme-btn" id="themeBtn">☀️</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-header">
+      <div class="sb-label">Proyectos recibidos</div>
+    </div>
+    <div class="sb-list" id="sbList">
+      <div style="padding:16px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center">Cargando...</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">Selecciona un proyecto para revisar</div>
+    </div>
+
+    <div class="detail" id="detail">
+      <div class="det-header">
+        <div class="det-title-row">
+          <div>
+            <div class="det-title" id="detTitle">—</div>
+            <div class="det-subtitle" id="detSub">—</div>
+          </div>
+          <div class="det-actions">
+            <button class="btn btn-blue" onclick="downloadExcel()">↓ Excel</button>
+            <button class="btn btn-amber" onclick="openClarify()">? Clarificar</button>
+            <button class="btn btn-primary" id="btnApprove" onclick="approveProject()">✓ Aprobar</button>
+          </div>
+        </div>
+        <nav class="tab-nav">
+          <button class="tab-btn active" onclick="switchTab('overview',this)">Resumen</button>
+          <button class="tab-btn" onclick="switchTab('dims',this)">Dimensiones</button>
+          <button class="tab-btn" onclick="switchTab('specs',this)">Especificaciones</button>
+          <button class="tab-btn" onclick="switchTab('decision',this)">Decisión</button>
+        </nav>
+      </div>
+
+      <div class="tab-content">
+        <div class="tab-pane active" id="tab-overview"></div>
+        <div class="tab-pane" id="tab-dims"></div>
+        <div class="tab-pane" id="tab-specs"></div>
+        <div class="tab-pane" id="tab-decision"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Clarify modal -->
+<div class="modal-overlay" id="clarifyModal" onclick="if(event.target===this)closeClarify()">
+  <div class="modal">
+    <div class="modal-title">Solicitar Clarificación</div>
+    <div class="modal-desc">Indica qué información falta o qué necesitas aclarar antes de preparar el presupuesto.</div>
+    <textarea class="modal-ta" id="clarifyNote" placeholder="Ej: Necesito el tipo de cimentación y la solución para el vano de 6.4m..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeClarify()">Cancelar</button>
+      <button class="btn btn-amber" onclick="submitClarify()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── API ───────────────────────────────────────────────────────────
+const API = {
+  get:  url => fetch(url).then(r => r.json()),
+  post: (url, body) => fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r => r.json()),
+};
+
+// ── STATE ─────────────────────────────────────────────────────────
+let currentId = null;
+
+// ── THEME ─────────────────────────────────────────────────────────
+(function(){
+  const t = localStorage.getItem('theme') || 'dark';
+  if(t === 'light') document.body.classList.add('light');
+  document.getElementById('themeBtn').textContent = t === 'light' ? '🌙' : '☀️';
+})();
+document.getElementById('themeBtn').addEventListener('click', function(){
+  const isLight = document.body.classList.toggle('light');
+  this.textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+});
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(title, type='success', msg='', duration=4000){
+  const icons = {success:'✓', error:'✕', warning:'⚠'};
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<div class="toast-hdr"><span>${icons[type]||'•'}</span><span class="toast-title">${title}</span></div>${msg?`<div class="toast-msg">${msg}</div>`:''}<div class="toast-prog"></div>`;
+  document.getElementById('toastWrap').appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  if(duration > 0){
+    const p = el.querySelector('.toast-prog');
+    p.style.width = '100%';
+    p.style.transition = `transform ${duration}ms linear`;
+    requestAnimationFrame(() => { p.style.transform = 'scaleX(0)'; });
+    setTimeout(() => { el.classList.remove('show'); setTimeout(()=>el.remove(), 350); }, duration);
+  }
+}
+
+// ── TABS ──────────────────────────────────────────────────────────
+function switchTab(id, btn){
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function v(val, unit=''){
+  if(val === null || val === undefined || val === 'unknown') return '<span class="nil">—</span>';
+  return `<strong>${val}</strong>${unit ? `<span style="font-size:11px;color:var(--text-muted);margin-left:3px">${unit}</span>` : ''}`;
+}
+function sdot(status){
+  const s = (status||'unknown').toLowerCase();
+  const cls = s.includes('flagged') ? 'flagged' : s.includes('confirmed') ? 'confirmed' : s.includes('suggested') ? 'suggested' : 'unknown';
+  return `<span class="sdot sdot-${cls}">${status||'—'}</span>`;
+}
+function pctColor(pct){ return pct >= 70 ? '#4CAF50' : pct >= 40 ? '#FFC107' : '#F44336'; }
+
+// ── SIDEBAR ───────────────────────────────────────────────────────
+async function loadList(){
+  try {
+    const list = await API.get('/api/extractions');
+    const el = document.getElementById('sbList');
+    if(!list.length){
+      el.innerHTML = `<div style="padding:16px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center">No hay proyectos aún.<br>Envía un email con PDFs para empezar.</div>`;
+      return;
+    }
+    el.innerHTML = list.map(e => {
+      const pct = e.completeness || 0;
+      const col = pctColor(pct);
+      const badge = e.approved
+        ? '<span class="badge badge-approved">Aprobado</span>'
+        : e.status === 'clarification_needed'
+        ? '<span class="badge badge-clarify">Clarificar</span>'
+        : '<span class="badge badge-pending">Pendiente</span>';
+      const loc = e.location && e.location !== 'Unknown' ? e.location : 'Sin ubicación';
+      const cli = e.client && e.client !== 'Unknown' && e.client !== 'unknown' ? e.client : '';
+      return `<div class="proj-card${currentId===e.id?' active':''}" onclick="loadProject('${e.id}')" data-id="${e.id}">
+        <div class="proj-name">${loc}${cli?' — '+cli:''}</div>
+        <div class="proj-meta">${e.id}</div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          ${badge}
+          <span style="font-size:10px;font-weight:700;color:${col};font-family:'JetBrains Mono',monospace">${pct}%</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){ toast('Error al cargar proyectos','error',e.message); }
+}
+
+// ── LOAD PROJECT ──────────────────────────────────────────────────
+async function loadProject(id){
+  currentId = id;
+  document.querySelectorAll('.proj-card').forEach(c => c.classList.remove('active'));
+  const card = document.querySelector(`[data-id="${id}"]`);
+  if(card) card.classList.add('active');
+
+  try {
+    const raw = await API.get(`/api/extractions/${id}`);
+    const ext = raw.extraction || {};
+
+    document.getElementById('emptyState').style.display = 'none';
+    const det = document.getElementById('detail');
+    det.classList.add('visible');
+
+    // Reset to first tab
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-overview').classList.add('active');
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+
+    renderDetail(ext, raw);
+  } catch(e){ toast('Error al cargar proyecto','error',e.message); }
+}
+
+function renderDetail(ext, raw){
+  const p  = ext.project || {};
+  const d  = ext.building_dimensions || {};
+  const g  = ext.building_geometry || {};
+  const sp = ext.technical_specifications || {};
+  const sc = ext.confidence_scores || {};
+  const sn = ext.structural_notes || [];
+  const mf = ext.missing_critical_fields || [];
+  const scope = ext.scope || {};
+  const cm = ext.commercial_terms || {};
+
+  // Header
+  const loc = p.location || 'Proyecto sin ubicación';
+  const cli = p.client_name && p.client_name !== 'unknown' ? p.client_name : '';
+  document.getElementById('detTitle').textContent = loc + (cli ? ' — ' + cli : '');
+  const dl = p.deadline ? `Plazo: ${p.deadline}${p.deadline_days_remaining!=null?' ('+p.deadline_days_remaining+' días)':''}` : 'Sin plazo definido';
+  document.getElementById('detSub').textContent = `${p.building_type||'Edificio'} · ${dl}`;
+
+  const btn = document.getElementById('btnApprove');
+  if(raw.approved){
+    btn.textContent = '✓ Aprobado'; btn.disabled = true;
+  } else {
+    btn.textContent = '✓ Aprobar'; btn.disabled = false;
+  }
+
+  // ── OVERVIEW ──────────────────────────────────────────────────
+  const pct = sc.completeness_percent || 0;
+  const col = pctColor(pct);
+  const circ = 2*Math.PI*26;
+  const offset = circ - (circ * pct / 100);
+
+  document.getElementById('tab-overview').innerHTML = `
+    <div class="g3" style="margin-bottom:16px">
+      <div class="card"><div class="card-label">Área Total</div><div class="kpi-val">${d.total_area_m2||'—'}<span class="kpi-unit">m²</span></div></div>
+      <div class="card"><div class="card-label">Parcela</div><div class="kpi-val">${d.plot_area_m2||'—'}<span class="kpi-unit">m²</span></div></div>
+      <div class="card"><div class="card-label">Completitud</div><div class="kpi-val" style="color:${col}">${pct}<span class="kpi-unit">%</span></div></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-label">Información del Proyecto</div>
+        <table class="dt">
+          <tr><td class="lbl">Ubicación</td><td class="val">${p.location||'—'}</td></tr>
+          <tr><td class="lbl">Cliente</td><td class="val">${cli||'—'}</td></tr>
+          <tr><td class="lbl">Arquitecto</td><td class="val">${p.architect && p.architect!=='unknown'?p.architect:'—'}</td></tr>
+          <tr><td class="lbl">Email</td><td class="val" style="font-size:11px;font-family:'DM Sans',sans-serif">${p.architect_email||'—'}</td></tr>
+          <tr><td class="lbl">Plazo</td><td class="val">${p.deadline||'—'}</td></tr>
+          <tr><td class="lbl">Días restantes</td><td class="val">${p.deadline_days_remaining!=null?p.deadline_days_remaining+' días':'—'}</td></tr>
+          <tr><td class="lbl">Tipo</td><td class="val">${p.building_type||'—'}</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-label">Confianza de Extracción</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+          <div class="ring-wrap">
+            <svg class="ring-svg" width="60" height="60" viewBox="0 0 60 60">
+              <circle class="ring-bg" cx="30" cy="30" r="26"/>
+              <circle class="ring-fg" cx="30" cy="30" r="26" stroke="${col}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+            </svg>
+            <div class="ring-txt" style="color:${col}">${pct}%</div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px">Completitud General</div>
+            <div style="font-size:11px;color:var(--text-muted)">Áreas: <strong>${sc.areas_confidence||'—'}</strong></div>
+            <div style="font-size:11px;color:var(--text-muted)">Especificaciones: <strong>${sc.specs_confidence||'—'}</strong></div>
+          </div>
+        </div>
+        ${mf.length ? `<div class="card-label">Campos faltantes</div>${mf.map(m=>`<div style="font-size:12px;color:#FFC107;padding:2px 0;font-family:'DM Sans',sans-serif">⚠ ${m}</div>`).join('')}` : '<div style="font-size:12px;color:#4CAF50">✓ Sin campos críticos faltantes</div>'}
+      </div>
+    </div>`;
+
+  // ── DIMENSIONS ────────────────────────────────────────────────
+  const gf = g.ground_floor||{}, ff = g.first_floor||{}, attic = g.attic||{}, roof = g.roof||{}, win = g.windows||{};
+  document.getElementById('tab-dims').innerHTML = `
+    <div class="g2" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-label">Superficies</div>
+        <table class="dt">
+          <tr><td class="lbl">Planta baja</td><td class="val">${d.ground_floor_area_m2!=null?d.ground_floor_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Primera planta</td><td class="val">${d.first_floor_area_m2!=null?d.first_floor_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Ático</td><td class="val">${d.attic_area_m2!=null?d.attic_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Terraza</td><td class="val">${d.terrace_area_m2!=null?d.terrace_area_m2+' m²':'—'}</td></tr>
+          <tr class="total"><td class="lbl">TOTAL</td><td class="val">${d.total_area_m2!=null?d.total_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Parcela</td><td class="val">${d.plot_area_m2!=null?d.plot_area_m2+' m²':'—'}</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-label">Geometría</div>
+        <table class="dt">
+          <tr><th colspan="2" class="section">Planta Baja</th></tr>
+          <tr><td class="lbl">Habitable</td><td class="val">${gf.habitable_area_m2!=null?gf.habitable_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Perímetro ext.</td><td class="val">${gf.ext_perimeter_m!=null?gf.ext_perimeter_m+' m':'—'}</td></tr>
+          <tr><td class="lbl">Paredes int.</td><td class="val">${gf.int_walls_length_m!=null?gf.int_walls_length_m+' m':'—'}</td></tr>
+          <tr><th colspan="2" class="section">Primera Planta</th></tr>
+          <tr><td class="lbl">Habitable</td><td class="val">${ff.habitable_area_m2!=null?ff.habitable_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Terraza</td><td class="val">${ff.terrace_area_m2!=null?ff.terrace_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Perímetro ext.</td><td class="val">${ff.ext_perimeter_m!=null?ff.ext_perimeter_m+' m':'—'}</td></tr>
+          <tr><td class="lbl">Paredes int.</td><td class="val">${ff.int_walls_length_m!=null?ff.int_walls_length_m+' m':'—'}</td></tr>
+          <tr><th colspan="2" class="section">Ático</th></tr>
+          <tr><td class="lbl">Superficie</td><td class="val">${attic.area_m2!=null?attic.area_m2+' m²':'—'}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-label">Cubierta</div>
+        <table class="dt">
+          <tr><td class="lbl">Área proyectada</td><td class="val">${roof.projected_area_m2!=null?roof.projected_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Pendiente</td><td class="val">${roof.pitch_degrees!=null?roof.pitch_degrees+'°':'—'}</td></tr>
+          <tr><td class="lbl">Canalón</td><td class="val">${roof.gutter_length_m!=null?roof.gutter_length_m+' m':'—'}</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-label">Ventanas</div>
+        <table class="dt">
+          <tr><td class="lbl">Cantidad</td><td class="val">${win.count!=null?win.count+' ud.':'—'}</td></tr>
+          <tr><td class="lbl">Área total</td><td class="val">${win.total_area_m2!=null?win.total_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Tipo</td><td class="val" style="font-family:'DM Sans',sans-serif">${win.type||'—'}</td></tr>
+        </table>
+      </div>
+    </div>`;
+
+  // ── SPECS ─────────────────────────────────────────────────────
+  const wall=sp.wall_system||{}, ins=sp.insulation||{}, iw=ins.walls||{}, ir=ins.roof||{}, fac=sp.facade||{}, rf=sp.roof_finish||{}, intW=sp.internal_walls||{};
+  document.getElementById('tab-specs').innerHTML = `
+    <div class="g2" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-label">Sistema de Pared</div>
+        <table class="dt">
+          <tr><td class="lbl">Material</td><td class="val" style="font-family:'DM Sans',sans-serif">${wall.material||'—'}</td></tr>
+          <tr><td class="lbl">Espesor</td><td class="val">${wall.thickness_mm?wall.thickness_mm+' mm':'—'}</td></tr>
+          <tr><td class="lbl">Estado</td><td class="val">${sdot(wall.status)}</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-label">Aislamiento — Paredes</div>
+        <table class="dt">
+          <tr><td class="lbl">Material</td><td class="val" style="font-family:'DM Sans',sans-serif">${iw.material||'—'}</td></tr>
+          <tr><td class="lbl">Espesor</td><td class="val">${iw.thickness_mm?iw.thickness_mm+' mm':'—'}</td></tr>
+          <tr><td class="lbl">Estado</td><td class="val">${sdot(iw.status)}</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-label">Aislamiento — Cubierta</div>
+        <table class="dt">
+          <tr><td class="lbl">Material</td><td class="val" style="font-family:'DM Sans',sans-serif">${ir.material||'—'}</td></tr>
+          <tr><td class="lbl">Espesor</td><td class="val">${ir.thickness_mm?ir.thickness_mm+' mm':'—'}</td></tr>
+          <tr><td class="lbl">Estado</td><td class="val">${sdot(ir.status)}</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-label">Fachada y Acabado</div>
+        <table class="dt">
+          <tr><td class="lbl">Fachada</td><td class="val" style="font-family:'DM Sans',sans-serif">${fac.material||'—'}</td></tr>
+          <tr><td class="lbl">Estado</td><td class="val">${sdot(fac.status)}</td></tr>
+          <tr><td class="lbl">Acabado cubierta</td><td class="val" style="font-family:'DM Sans',sans-serif">${rf.type||'—'}</td></tr>
+          <tr><td class="lbl">Estado</td><td class="val">${sdot(rf.status)}</td></tr>
+          <tr><td class="lbl">Color</td><td class="val" style="font-family:'DM Sans',sans-serif">${rf.color||'—'}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="max-width:400px">
+      <div class="card-label">Paredes Interiores</div>
+      <table class="dt">
+        <tr><td class="lbl">Material</td><td class="val" style="font-family:'DM Sans',sans-serif">${intW.material && intW.material!=='unknown'?intW.material:'—'}</td></tr>
+        <tr><td class="lbl">Longitud total</td><td class="val">${intW.length_m?intW.length_m+' m':'—'}</td></tr>
+      </table>
+    </div>`;
+
+  // ── DECISION ──────────────────────────────────────────────────
+  const missingHtml = mf.length
+    ? mf.map(m=>`<div class="missing-item">⚠ ${m}</div>`).join('')
+    : '<div style="font-size:13px;color:#4CAF50;padding:4px 0">✓ Sin campos críticos faltantes</div>';
+
+  const structHtml = sn.length
+    ? sn.map(n=>`<div class="str-note"><div class="str-title">${n.constraint}</div><div class="str-desc">${n.description||''}</div>${n.proposed_solution?`<div class="str-solution">→ ${n.proposed_solution}</div>`:''}</div>`).join('')
+    : '<div style="font-size:13px;color:var(--text-muted)">Sin notas estructurales.</div>';
+
+  document.getElementById('tab-decision').innerHTML = `
+    <div class="g2">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-label">Campos Faltantes</div>
+          ${missingHtml}
+        </div>
+        <div class="card">
+          <div class="card-label">Notas Estructurales</div>
+          ${structHtml}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-label">Alcance</div>
+          <div style="font-size:10px;font-weight:700;color:#4CAF50;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">Incluido</div>
+          <ul class="scope-list scope-in">${(scope.in_scope||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+          <div style="font-size:10px;font-weight:700;color:#F44336;letter-spacing:0.06em;text-transform:uppercase;margin:12px 0 6px">Excluido</div>
+          <ul class="scope-list scope-out">${(scope.out_of_scope||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+        </div>
+        <div class="card">
+          <div class="card-label">Condiciones Comerciales</div>
+          <table class="dt">
+            <tr><td class="lbl">Margen</td><td class="val">${cm.margin_percent?cm.margin_percent+'%':'—'}</td></tr>
+            <tr><td class="lbl">IVA</td><td class="val">${cm.vat_rate_percent?cm.vat_rate_percent+'%':'—'}</td></tr>
+            <tr><td class="lbl">Validez oferta</td><td class="val">${cm.quote_validity_days?cm.quote_validity_days+' días':'—'}</td></tr>
+            <tr><td class="lbl">Condiciones pago</td><td class="val">${cm.payment_terms||'—'}</td></tr>
+            <tr><td class="lbl">Moneda</td><td class="val">${cm.currency||'EUR'}</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── APPROVE ───────────────────────────────────────────────────────
+async function approveProject(){
+  if(!currentId) return;
+  const btn = document.getElementById('btnApprove');
+  btn.innerHTML = '<span class="spinner"></span> Aprobando...';
+  btn.disabled = true;
+  try {
+    await API.post(`/api/extractions/${currentId}/approve`, {});
+    toast('Proyecto aprobado','success','Haz clic en "↓ Excel" para descargar el resumen.');
+    btn.textContent = '✓ Aprobado';
+    const card = document.querySelector(`[data-id="${currentId}"] .badge`);
+    if(card){ card.className = 'badge badge-approved'; card.textContent = 'Aprobado'; }
+  } catch(e){
+    toast('Error al aprobar','error', e.message);
+    btn.textContent = '✓ Aprobar';
+    btn.disabled = false;
+  }
+}
+
+// ── EXCEL ─────────────────────────────────────────────────────────
+function downloadExcel(){
+  if(!currentId) return;
+  const a = document.createElement('a');
+  a.href = `/api/extractions/${currentId}/excel`;
+  a.download = `${currentId}_presupuesto.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('Descargando Excel...','success');
+}
+
+// ── CLARIFY ───────────────────────────────────────────────────────
+function openClarify(){ document.getElementById('clarifyModal').classList.add('open'); document.getElementById('clarifyNote').focus(); }
+function closeClarify(){ document.getElementById('clarifyModal').classList.remove('open'); document.getElementById('clarifyNote').value=''; }
+async function submitClarify(){
+  if(!currentId) return;
+  const note = document.getElementById('clarifyNote').value.trim();
+  if(!note){ toast('Escribe una nota primero','warning'); return; }
+  try {
+    await API.post(`/api/extractions/${currentId}/clarify`, {note});
+    closeClarify();
+    toast('Solicitud guardada','success','El proyecto está marcado como "Necesita clarificación".');
+    const card = document.querySelector(`[data-id="${currentId}"] .badge`);
+    if(card){ card.className = 'badge badge-clarify'; card.textContent = 'Clarificar'; }
+  } catch(e){ toast('Error','error',e.message); }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+loadList();
+setInterval(loadList, 30000);
+</script>
+</body>
+</html>
