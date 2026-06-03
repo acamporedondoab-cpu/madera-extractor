@@ -121,7 +121,10 @@ Return ONLY valid JSON (no markdown, no code blocks) with these fields:
     }},
     "attic": {{
       "area_m2": "number",
-      "height_m": "number or null"
+      "height_m": "number or null — use midpoint if a range is given",
+      "height_min_m": "number or null — minimum ridge/eaves height if a range was stated (e.g. 0.8 from '0.8-2.2m')",
+      "height_max_m": "number or null — maximum height if a range was stated",
+      "ext_perimeter_m": "number or null"
     }},
     "roof": {{
       "projected_area_m2": "number",
@@ -165,6 +168,11 @@ Return ONLY valid JSON (no markdown, no code blocks) with these fields:
       "type": "ceramic tiles, slate, metal, etc.",
       "color": "description or null",
       "status": "confirmed or suggested"
+    }},
+    "foundation": {{
+      "type": "slab, strip footing, pile, raft, etc. — extract exactly as stated in documents",
+      "material": "reinforced concrete, etc. or null",
+      "status": "confirmed, suggested, unknown"
     }}
   }},
   
@@ -208,7 +216,6 @@ Return ONLY valid JSON (no markdown, no code blocks) with these fields:
   
   "missing_critical_fields": [
     "facade material",
-    "foundation type",
     "6.4m span solution"
   ]
 }}
@@ -218,7 +225,10 @@ IMPORTANT:
 - For status: use only 'confirmed', 'suggested', 'unknown', 'flagged'
 - Be conservative: if not explicitly stated, mark as 'unknown'
 - For measurements: extract as numbers (no units in value)
+- For attic: if a height range is given (e.g. "0.8m to 2.2m"), populate height_min_m and height_max_m; set height_m to the midpoint
+- For foundation: extract foundation type and material if mentioned anywhere in the documents; leave as null if not found
 - Mark structural constraints that need decision in 'structural_notes'
+- Only list a field in missing_critical_fields if it is genuinely absent from the documents AND needed for quoting
 """
     
     def _call_mistral(self, prompt: str) -> str:

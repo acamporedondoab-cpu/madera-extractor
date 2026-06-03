@@ -71,7 +71,11 @@ def _compute_totals(ext: dict) -> tuple:
 
     # Per-floor arrays for SUMPRODUCT
     floor_height = 2.8  # default from Parameters sheet
-    attic_height = _num(g2.get("height_m"), 1.5)
+    # Prefer explicit min height for conservative costing; fall back to midpoint, then default 1.5m
+    attic_height = (
+        _num(g2.get("height_min_m"), None) or
+        _num(g2.get("height_m"), 1.5)
+    )
     perimeters = [
         _num(g0.get("ext_perimeter_m")),
         _num(g1.get("ext_perimeter_m")),
@@ -96,10 +100,13 @@ def _compute_totals(ext: dict) -> tuple:
     shutters        = int(_num(wins.get("count"), 0))
     site_months     = 3
 
-    # Large-span beam — check constraint first (e.g. "6.4m living room span"),
-    # fall back to proposed_solution, then default 8.0m
-    large_span_m = 8.0
+    # Large-span beam — only cost when engineering decision is resolved/confirmed/approved.
+    # Unresolved decisions default to 0 so they are excluded from quote totals.
+    _RESOLVED = {"approved", "resolved", "confirmed"}
+    large_span_m = 0.0
     for note in struct_notes:
+        if (note.get("status") or "").lower().strip() not in _RESOLVED:
+            continue
         for field in ("constraint", "proposed_solution"):
             m = re.search(r'(\d+(?:\.\d+)?)\s*m\b', note.get(field, ""))
             if m:

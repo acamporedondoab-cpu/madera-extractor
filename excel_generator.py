@@ -105,7 +105,11 @@ def generate_excel(extraction_data: Dict[str, Any]) -> bytes:
 
     # ── Pre-compute derived geometry ─────────────────────────────────
     floor_height  = 2.8
-    attic_height  = _num(attic.get("height_m"), 1.5)
+    # Prefer explicit min height for conservative costing; fall back to midpoint, then default 1.5m
+    attic_height  = (
+        _num(attic.get("height_min_m"), None) or
+        _num(attic.get("height_m"), 1.5)
+    )
     perims        = [_num(g0.get("ext_perimeter_m")),
                      _num(g1.get("ext_perimeter_m")),
                      _num(attic.get("ext_perimeter_m"), 0)]
@@ -125,9 +129,14 @@ def generate_excel(extraction_data: Dict[str, Any]) -> bytes:
     window_m2        = _num(wins.get("total_area_m2"))
     shutter_count    = _num(wins.get("count"), 0)
 
-    # Large-span beam — check constraint field first
-    large_span_m = 8.0
+    # Large-span beam — only cost when engineering decision is resolved/confirmed/approved.
+    # Unresolved (flagged for decision / pending / unresolved) → 0 so the line item is
+    # excluded from totals rather than silently priced at a wrong dimension.
+    _RESOLVED = {"approved", "resolved", "confirmed"}
+    large_span_m = 0.0
     for note in struct_notes:
+        if (note.get("status") or "").lower().strip() not in _RESOLVED:
+            continue
         for field in ("constraint", "proposed_solution"):
             m = re.search(r'(\d+(?:\.\d+)?)\s*m\b', note.get(field, ""))
             if m:
@@ -244,6 +253,53 @@ def generate_excel(extraction_data: Dict[str, Any]) -> bytes:
         comp["G33"] = round(selling_price, 2)
         comp["G34"] = round(vat_amount, 2)
         comp["G35"] = round(total_incl_vat, 2)
+
+        # ── Audit sheet — human-readable formula traces ──────────────
+        audit = wb.create_sheet("Audit")
+        audit["A1"] = "Line item"
+        audit["B1"] = "Quantity"
+        audit["C1"] = "Unit"
+        audit["D1"] = "Formula / source"
+        audit_rows = [
+            ("STR-001", round(quantities["STR-001"], 2), "m²",
+             f"ext_wall = ({round(perims[0],1)}+{round(perims[1],1)}+{round(perims[2],1)}) perims × ({floor_height},{floor_height},{round(attic_height,2)}) heights"),
+            ("STR-002", round(quantities["STR-002"], 2), "m²",
+             f"int_wall = ({round(int_walls_len[0],1)}+{round(int_walls_len[1],1)}) × {floor_height}m"),
+            ("STR-010", round(quantities["STR-010"], 2), "m",
+             f"std_beam = intermediate_slab({round(intermediate_slab,2)}) × 0.18"),
+            ("STR-011", round(quantities["STR-011"], 2), "m",
+             f"large_span = {large_span_m}m from structural_notes (0 = unresolved/excluded)"),
+            ("STR-020", round(quantities["STR-020"], 2), "m²",
+             f"intermediate_slab = p1_hab({round(p1_hab,1)}) + attic({round(attic_m2,1)})"),
+            ("STR-021", round(quantities["STR-021"], 2), "m²",
+             f"roof projected area"),
+            ("ENV-001", round(quantities["ENV-001"], 2), "m²", "= ext_wall_m2"),
+            ("ENV-002", round(quantities["ENV-002"], 2), "m²", "= roof_m2"),
+            ("ENV-003", round(quantities["ENV-003"], 2), "m²", "= ext_wall_m2"),
+            ("ENV-004", round(quantities["ENV-004"], 2), "m²", "= roof_m2"),
+            ("ENV-005", round(quantities["ENV-005"], 2), "m",  "= gutter_length_m"),
+            ("WIN-001", round(quantities["WIN-001"], 2), "m²", "= windows.total_area_m2"),
+            ("WIN-010", round(quantities["WIN-010"], 2), "u",  "= windows.count"),
+            ("WIN-020", 1,                               "u",  "fixed = 1 entrance door"),
+            ("SITE-01", _SITE_MONTHS,                    "mo", f"fixed = {_SITE_MONTHS} months"),
+            ("SITE-02", _SITE_MONTHS,                    "mo", f"fixed = {_SITE_MONTHS} months"),
+            ("SITE-10", 1,                               "ls", "fixed = engineering lump sum"),
+            ("SITE-20", _ASSEMBLY_DAYS,                  "d",  f"fixed = {_ASSEMBLY_DAYS} assembly days"),
+        ]
+        for i, row_data in enumerate(audit_rows, start=2):
+            for j, val in enumerate(row_data, start=1):
+                audit.cell(row=i, column=j, value=val)
+        # Summary
+        audit[f"A{len(audit_rows)+3}"] = "total_cost"
+        audit[f"B{len(audit_rows)+3}"] = round(total_cost, 2)
+        audit[f"A{len(audit_rows)+4}"] = "margin %"
+        audit[f"B{len(audit_rows)+4}"] = round(margin * 100, 1)
+        audit[f"A{len(audit_rows)+5}"] = "selling_price"
+        audit[f"B{len(audit_rows)+5}"] = round(selling_price, 2)
+        audit[f"A{len(audit_rows)+6}"] = "vat_amount"
+        audit[f"B{len(audit_rows)+6}"] = round(vat_amount, 2)
+        audit[f"A{len(audit_rows)+7}"] = "total_incl_vat"
+        audit[f"B{len(audit_rows)+7}"] = round(total_incl_vat, 2)
 
         wb.calculation.fullCalcOnLoad = True
         wb.save(tmp_path)

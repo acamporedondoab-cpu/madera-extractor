@@ -98,6 +98,8 @@ def extract():
                         url = supa.upload_pdf(project_name, name, pdf_bytes)
                         stored_pdfs.append({"name": name, "url": url})
                     except Exception as e:
+                        # Log full error so Railway logs reveal the exact HTTP status/body.
+                        # pdf_attachments will be absent from the saved record if all uploads fail.
                         print(f"⚠ PDF upload failed for {name}: {e}")
         else:
             # Local mode: use file paths directly (may be empty list)
@@ -246,13 +248,35 @@ def get_extraction(extraction_id):
     return jsonify(json.loads(filepath.read_text(encoding="utf-8")))
 
 
+_UNRESOLVED_STATUSES = {"flagged for decision", "flagged", "pending", "unresolved"}
+
+
+def _unresolved_decisions(extraction_data: dict) -> list:
+    """Return list of unresolved structural note constraint strings."""
+    ext = extraction_data.get("extraction") or extraction_data
+    notes = ext.get("structural_notes") or []
+    return [
+        note.get("constraint") or note.get("description") or "Unknown constraint"
+        for note in notes
+        if (note.get("status") or "").lower().strip() in _UNRESOLVED_STATUSES
+    ]
+
+
 @app.route("/api/extractions/<extraction_id>/approve", methods=["POST"])
 def approve_extraction(extraction_id):
-    """Mark extraction as approved."""
+    """Mark extraction as approved. Blocked if unresolved engineering decisions exist."""
     if supa.is_configured():
         row = supa.get_one(extraction_id)
         if not row:
             return jsonify({"error": "Not found"}), 404
+        data = row.get("data") or {}
+        unresolved = _unresolved_decisions(data)
+        if unresolved:
+            return jsonify({
+                "error": "Cannot approve: unresolved engineering decisions exist",
+                "unresolved_items": unresolved,
+                "action": "Resolve all flagged structural decisions in the Decisión tab first"
+            }), 409
         supa.update(extraction_id, {"approved": True, "status": "approved"})
         return jsonify({"status": "approved", "id": extraction_id})
 
@@ -260,6 +284,13 @@ def approve_extraction(extraction_id):
     if not filepath.exists():
         return jsonify({"error": "Not found"}), 404
     data = json.loads(filepath.read_text(encoding="utf-8"))
+    unresolved = _unresolved_decisions(data)
+    if unresolved:
+        return jsonify({
+            "error": "Cannot approve: unresolved engineering decisions exist",
+            "unresolved_items": unresolved,
+            "action": "Resolve all flagged structural decisions in the Decisión tab first"
+        }), 409
     data["approved"] = True
     data["approved_at"] = datetime.now().isoformat()
     data["status"] = "approved"

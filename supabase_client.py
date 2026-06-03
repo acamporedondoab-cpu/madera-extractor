@@ -4,8 +4,12 @@ Supabase REST client for extraction persistence.
 Uses the Supabase PostgREST API directly — no SDK required.
 
 Required env vars:
-  SUPABASE_URL      e.g. https://xxxx.supabase.co
-  SUPABASE_ANON_KEY eyJ...
+  SUPABASE_URL          e.g. https://xxxx.supabase.co
+  SUPABASE_ANON_KEY     eyJ... (database read/write via PostgREST)
+
+Optional env vars:
+  SUPABASE_SERVICE_KEY  eyJ... (service role key — needed for Storage uploads
+                                from Railway backend; bypasses bucket RLS)
 """
 
 import os
@@ -16,6 +20,9 @@ import requests
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+# Service role key used only for Storage uploads (never sent to the client).
+# Falls back to anon key if not set; upload will then fail if bucket RLS blocks anon writes.
+_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "") or SUPABASE_KEY
 _TABLE = "extractions"
 _BUCKET = "pdf-attachments"
 
@@ -88,21 +95,29 @@ def get_one(extraction_id: str) -> Optional[dict]:
 
 
 def upload_pdf(project_id: str, filename: str, pdf_bytes: bytes) -> str:
-    """Upload PDF to Supabase Storage bucket. Returns public URL."""
+    """Upload PDF to Supabase Storage bucket using service role key. Returns public URL.
+
+    Uses SUPABASE_SERVICE_KEY so Railway backend can write to the bucket
+    regardless of bucket RLS policies. Falls back to anon key if service key
+    is not configured (upload will fail with 403 if bucket denies anon writes).
+    """
     path = f"{project_id}/{filename}"
     url = f"{SUPABASE_URL}/storage/v1/object/{_BUCKET}/{path}"
     r = requests.post(
         url,
         data=pdf_bytes,
         headers={
-            "apikey": SUPABASE_KEY,
-            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "apikey": _SERVICE_KEY,
+            "Authorization": f"Bearer {_SERVICE_KEY}",
             "Content-Type": "application/pdf",
             "x-upsert": "true",
         },
         timeout=30,
     )
-    r.raise_for_status()
+    if not r.ok:
+        raise RuntimeError(
+            f"Storage upload failed [{r.status_code}]: {r.text[:200]}"
+        )
     return f"{SUPABASE_URL}/storage/v1/object/public/{_BUCKET}/{path}"
 
 

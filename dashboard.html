@@ -641,6 +641,8 @@ function renderDetail(ext, raw){
 
   // ── DOCUMENTS ─────────────────────────────────────────────────
   const attachments = raw.pdf_attachments || [];
+  // Fallback: if storage upload failed, at least show the PDF filenames extracted from the email
+  const pdfNamesFallback = ((raw.source_data || {}).pdf_names || []);
   const emailBody = (raw.source_data || {}).email_text || '';
   const tabBtnDocs = document.getElementById('tabBtnDocs');
   const emailCard = emailBody
@@ -669,6 +671,24 @@ function renderDetail(ext, raw){
         ${emailCard}
       </div>`;
     setTimeout(() => viewPdf(attachments[0].url, attachments[0].name), 50);
+  } else if(pdfNamesFallback.length) {
+    // Storage upload failed but extraction succeeded — show names as non-clickable chips
+    tabBtnDocs.textContent = `Documentos (${pdfNamesFallback.length})`;
+    const chipHtml = pdfNamesFallback.map(n =>
+      `<div class="doc-btn" style="cursor:default;opacity:0.7" title="Archivo procesado pero no almacenado en la nube">${esc(n)}</div>`
+    ).join('');
+    document.getElementById('tab-docs').innerHTML = `
+      <div class="docs-layout">
+        <div class="card" style="flex-shrink:0">
+          <div class="card-label">Documentos procesados</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">
+            Estos PDFs fueron extraídos correctamente pero no se guardaron en la nube.
+            Para ver los archivos, configura <code>SUPABASE_SERVICE_KEY</code> en Railway.
+          </div>
+          <div class="doc-list">${chipHtml}</div>
+        </div>
+        ${emailCard}
+      </div>`;
   } else {
     tabBtnDocs.textContent = 'Documentos';
     document.getElementById('tab-docs').innerHTML = `
@@ -777,9 +797,21 @@ async function approveProject(){
   btn.innerHTML = '<span class="spinner"></span> Aprobando...';
   btn.disabled = true;
   try {
-    await API.post(`/api/extractions/${currentId}/approve`, {});
+    const resp = await fetch(`/api/extractions/${currentId}/approve`, {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    const json = await resp.json();
+    if(resp.status === 409){
+      // Unresolved engineering decisions — list them for the user
+      const items = (json.unresolved_items || []).map(s => `• ${s}`).join('\n');
+      toast('No se puede aprobar — hay decisiones sin resolver','error',
+        `Resuelve estas decisiones en la pestaña Decisión primero:\n${items}`);
+      btn.textContent = '✓ Aprobar';
+      btn.disabled = false;
+      return;
+    }
+    if(!resp.ok) throw new Error(json.error || 'Error desconocido');
     toast('Proyecto aprobado','success','Descarga el Excel y la Oferta Word con los botones de arriba.');
     btn.textContent = '✓ Aprobado';
+    btn.disabled = true;
     _showDownloadButtons(currentId);
     const card = document.querySelector(`[data-id="${currentId}"] .badge`);
     if(card){ card.className = 'badge badge-approved'; card.textContent = 'Aprobado'; }
