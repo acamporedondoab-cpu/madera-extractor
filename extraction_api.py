@@ -457,6 +457,90 @@ def update_fields(extraction_id):
     })
 
 
+@app.route("/api/extractions/<extraction_id>/notes/resolve", methods=["POST"])
+def resolve_structural_note(extraction_id):
+    """
+    Resolve a single structural note by index or constraint string.
+
+    Payload:
+      {
+        "note_index": 0,                          ← preferred — zero-based array index
+        "constraint": "6.4m living room span",    ← fallback fuzzy match if index absent
+        "proposed_solution": "GL24h 240x480 beam"
+      }
+
+    Sets status=resolved, proposed_solution, resolved_at on the matched note only.
+    Other notes are not touched.
+    """
+    body = request.get_json(force=True, silent=True) or {}
+    note_index   = body.get("note_index")
+    constraint   = body.get("constraint", "")
+    proposed_sol = (body.get("proposed_solution") or "").strip()
+
+    if not proposed_sol:
+        return jsonify({"error": "proposed_solution is required"}), 400
+
+    if supa.is_configured():
+        row = supa.get_one(extraction_id)
+        if not row:
+            return jsonify({"error": "Not found"}), 404
+        stored = (row.get("data") or {}).copy()
+    else:
+        filepath = EXTRACTION_DIR / f"{extraction_id}.json"
+        if not filepath.exists():
+            return jsonify({"error": "Not found"}), 404
+        stored = json.loads(filepath.read_text(encoding="utf-8"))
+
+    ext   = stored.get("extraction") or {}
+    notes = ext.get("structural_notes") or []
+
+    if not notes:
+        return jsonify({"error": "No structural notes found on this extraction"}), 404
+
+    # 1) Find by index (preferred)
+    target_idx = None
+    if note_index is not None:
+        idx = int(note_index)
+        if 0 <= idx < len(notes):
+            target_idx = idx
+
+    # 2) Fallback: fuzzy match on constraint string
+    if target_idx is None and constraint:
+        cl = constraint.lower().strip()
+        for i, note in enumerate(notes):
+            nc = (note.get("constraint") or "").lower().strip()
+            if nc == cl or cl in nc or nc in cl:
+                target_idx = i
+                break
+
+    if target_idx is None:
+        return jsonify({
+            "error": f"Structural note not found",
+            "detail": f"index={note_index}, constraint='{constraint}', available={len(notes)}"
+        }), 404
+
+    # Mutate only the matched note
+    notes[target_idx]["proposed_solution"] = proposed_sol
+    notes[target_idx]["status"]            = "resolved"
+    notes[target_idx]["resolved_at"]       = datetime.now().isoformat()
+
+    ext["structural_notes"] = notes
+    stored["extraction"]    = ext
+
+    if supa.is_configured():
+        supa.update(extraction_id, {"data": stored})
+    else:
+        filepath.write_text(json.dumps(stored, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    unresolved_remaining = len(_unresolved_decisions(stored))
+    return jsonify({
+        "status":               "resolved",
+        "note_index":           target_idx,
+        "constraint":           notes[target_idx].get("constraint"),
+        "unresolved_remaining": unresolved_remaining,
+    })
+
+
 @app.route("/debug", methods=["POST", "GET"])
 def debug():
     """Echo back exactly what n8n sends — for troubleshooting only"""

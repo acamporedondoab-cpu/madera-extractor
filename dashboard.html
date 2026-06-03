@@ -145,11 +145,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 .field-input:focus{border-color:var(--green-primary)}
 .field-unit{font-size:12px;color:var(--text-muted);flex-shrink:0;width:28px}
 
-/* Structural note */
-.str-note{padding:14px 16px;background:rgba(244,67,54,0.06);border:1px solid rgba(244,67,54,0.2);border-radius:8px;margin-bottom:8px}
-.str-title{font-size:13px;font-weight:600;color:#F44336;margin-bottom:4px}
+/* Structural note — status-aware */
+.str-note{padding:14px 16px;border-radius:8px;margin-bottom:8px}
+.str-note.str-flagged{background:rgba(244,67,54,0.06);border:1px solid rgba(244,67,54,0.2)}
+.str-note.str-resolved{background:rgba(76,175,80,0.06);border:1px solid rgba(76,175,80,0.2)}
+.str-note.str-neutral{background:rgba(255,255,255,0.03);border:1px solid var(--border-color)}
+.str-title{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.str-title.str-t-flagged{color:#F44336}
+.str-title.str-t-resolved{color:#4CAF50}
+.str-title.str-t-neutral{color:var(--text-secondary)}
+.str-status-badge{font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px;flex-shrink:0}
+.str-status-badge.sbadge-flagged{background:rgba(244,67,54,0.15);color:#F44336}
+.str-status-badge.sbadge-resolved{background:rgba(76,175,80,0.15);color:#4CAF50}
+.str-status-badge.sbadge-neutral{background:rgba(255,255,255,0.08);color:var(--text-secondary)}
 .str-desc{font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-family:'DM Sans',sans-serif}
-.str-solution{font-size:12px;color:var(--text-muted);font-style:italic;font-family:'DM Sans',sans-serif}
+.str-solution{font-size:12px;color:var(--text-muted);font-style:italic;font-family:'DM Sans',sans-serif;margin-bottom:2px}
+.str-resolved-at{font-size:11px;color:var(--text-muted);margin-top:2px;font-family:'DM Sans',sans-serif}
+.str-resolve-form{margin-top:10px;display:flex;gap:8px;align-items:center}
+.str-resolve-input{flex:1;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 10px;outline:none;font-family:'DM Sans',sans-serif;transition:border-color 0.15s}
+.str-resolve-input:focus{border-color:var(--green-primary)}
+.str-resolve-btn{background:var(--green-primary);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background 0.15s}
+.str-resolve-btn:hover{background:var(--green-dark)}
+.str-resolve-btn:disabled{opacity:0.5;cursor:not-allowed}
 
 /* Scope list */
 .scope-list{list-style:none}
@@ -725,8 +742,37 @@ function renderDetail(ext, raw){
     </form>
   ` : '<div style="font-size:13px;color:#4CAF50;padding:4px 0">✓ Sin campos críticos faltantes</div>';
 
+  const _NOTE_UNRESOLVED = new Set(["flagged for decision","flagged","pending","unresolved"]);
+  function _noteCard(n, idx){
+    const st = (n.status||"unknown").toLowerCase().trim();
+    const isUnresolved = _NOTE_UNRESOLVED.has(st);
+    const isResolved   = !isUnresolved && (st==="resolved"||st==="confirmed"||st==="approved");
+    const noteClass    = isUnresolved ? "str-flagged" : isResolved ? "str-resolved" : "str-neutral";
+    const titleClass   = isUnresolved ? "str-t-flagged" : isResolved ? "str-t-resolved" : "str-t-neutral";
+    const badgeClass   = isUnresolved ? "sbadge-flagged" : isResolved ? "sbadge-resolved" : "sbadge-neutral";
+    const badgeLabel   = isUnresolved ? "Pendiente" : isResolved ? "Resuelto" : (n.status||"—");
+    const solHtml      = (!isUnresolved && n.proposed_solution)
+      ? `<div class="str-solution">→ ${esc(n.proposed_solution)}</div>` : "";
+    const tsHtml       = n.resolved_at
+      ? `<div class="str-resolved-at">Resuelto: ${n.resolved_at.replace("T"," ").slice(0,19)}</div>` : "";
+    const formHtml     = isUnresolved ? `
+      <div class="str-resolve-form">
+        <input class="str-resolve-input" type="text" id="note-sol-${idx}"
+          placeholder="Solución acordada (ej: viga GL24h 240×480mm)..."
+          value="${esc(n.proposed_solution||'')}">
+        <button class="str-resolve-btn"
+          onclick="resolveNote(${idx},${JSON.stringify(n.constraint||'')})">Resolver</button>
+      </div>` : "";
+    return `<div class="str-note ${noteClass}" id="str-note-card-${idx}">
+      <div class="str-title ${titleClass}">${esc(n.constraint||"Nota estructural")}
+        <span class="str-status-badge ${badgeClass}">${badgeLabel}</span>
+      </div>
+      ${n.description?`<div class="str-desc">${esc(n.description)}</div>`:""}
+      ${solHtml}${tsHtml}${formHtml}
+    </div>`;
+  }
   const structHtml = sn.length
-    ? sn.map(n=>`<div class="str-note"><div class="str-title">${n.constraint}</div><div class="str-desc">${n.description||''}</div>${n.proposed_solution?`<div class="str-solution">→ ${n.proposed_solution}</div>`:''}</div>`).join('')
+    ? sn.map((n,i)=>_noteCard(n,i)).join('')
     : '<div style="font-size:13px;color:var(--text-muted)">Sin notas estructurales.</div>';
 
   document.getElementById('tab-decision').innerHTML = `
@@ -929,6 +975,41 @@ async function saveMissingFields(e){
     toast('Error al guardar','error', err.message);
     btn.textContent = 'Guardar cambios';
     btn.disabled = false;
+  }
+}
+
+// ── RESOLVE STRUCTURAL NOTE ───────────────────────────────────────
+async function resolveNote(noteIndex, constraint){
+  if(!currentId) return;
+  const input = document.getElementById(`note-sol-${noteIndex}`);
+  if(!input) return;
+  const solution = input.value.trim();
+  if(!solution){
+    toast('Rellena la solución antes de resolver','warning');
+    return;
+  }
+  const btn = input.nextElementSibling;
+  if(btn){ btn.textContent='...'; btn.disabled=true; }
+
+  try {
+    const resp = await fetch(`/api/extractions/${currentId}/notes/resolve`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({note_index: noteIndex, constraint, proposed_solution: solution}),
+    });
+    const json = await resp.json();
+    if(!resp.ok) throw new Error(json.error || 'Error desconocido');
+
+    const remaining = json.unresolved_remaining ?? 0;
+    toast('Nota resuelta','success',
+      remaining > 0
+        ? `Quedan ${remaining} decisión(es) pendiente(s).`
+        : 'Todas las decisiones resueltas — ya puedes aprobar el proyecto.');
+
+    await loadProject(currentId);
+  } catch(err){
+    toast('Error al resolver nota','error', err.message);
+    if(btn){ btn.textContent='Resolver'; btn.disabled=false; }
   }
 }
 
