@@ -797,7 +797,7 @@ function renderDetail(ext, raw){
           placeholder="Agreed solution (e.g. GL24h 240×480mm beam)..."
           value="${esc(n.proposed_solution||'')}">
         <button class="str-resolve-btn"
-          onclick="resolveNote(${idx},${JSON.stringify(n.constraint||'')})">Resolve</button>
+          onclick="resolveNote(${idx},${esc(JSON.stringify(n.constraint||''))})">Resolve</button>
       </div>` : "";
     return `<div class="str-note ${noteClass}" id="str-note-card-${idx}">
       <div class="str-title ${titleClass}">${esc(n.constraint||"Structural note")}
