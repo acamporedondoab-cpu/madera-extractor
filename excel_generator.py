@@ -54,6 +54,27 @@ _CATEGORIES = {
     "SITE-01": "SITE", "SITE-02": "SITE", "SITE-10": "SITE", "SITE-20": "SITE",
 }
 
+_DESCRIPTIONS = {
+    "STR-001": "X-lam wall panel 140 mm (external load-bearing)",
+    "STR-002": "X-lam wall panel 100 mm (internal load-bearing)",
+    "STR-010": "GL24h glulam beam 200x400",
+    "STR-011": "GL24h glulam beam 240x480 (large spans)",
+    "STR-020": "X-lam intermediate slab 200 mm",
+    "STR-021": "X-lam roof slab 160 mm",
+    "ENV-001": "Wood-fibre insulation 200 mm (walls)",
+    "ENV-002": "Wood-fibre insulation 240 mm (roof)",
+    "ENV-003": "Ventilated facade - larch cladding",
+    "ENV-004": "Ceramic tile roof package (membrane + tiles)",
+    "ENV-005": "Aluminium flashings and gutter set",
+    "WIN-001": "Aluminium-clad timber window, triple glazing",
+    "WIN-010": "External louvre shutter (manual)",
+    "WIN-020": "Glazed aluminium entrance door",
+    "SITE-01": "Site crane rental (incl. operator, per month)",
+    "SITE-02": "Facade scaffolding (per month)",
+    "SITE-10": "Engineering and project management (lump sum)",
+    "SITE-20": "On-site assembly labour",
+}
+
 _ASSEMBLY_DAYS = 35
 _SITE_MONTHS   = 3
 
@@ -239,6 +260,7 @@ def generate_excel(extraction_data: Dict[str, Any]) -> bytes:
             row = 5 + i
             qty   = round(quantities[code], 2)
             price = _PRICES[code]
+            comp[f"B{row}"] = _DESCRIPTIONS[code]
             comp[f"D{row}"] = qty
             comp[f"F{row}"] = price
             comp[f"G{row}"] = round(qty * price, 2)
