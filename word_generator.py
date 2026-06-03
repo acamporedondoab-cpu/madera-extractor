@@ -146,7 +146,7 @@ def _compute_totals(ext: dict) -> tuple:
     )
 
     def selling(cost):
-        return round(cost / (1 - margin), -3) if margin < 1 else cost
+        return round(cost / (1 - margin), 2) if margin < 1 else cost
 
     sol1 = selling(str_cost + site_cost)
     sol2 = selling(str_cost + env_cost + win_cost + site_cost)
@@ -302,6 +302,65 @@ def generate_word(extraction_data: Dict[str, Any]) -> bytes:
         validity = int(_num((ext.get("commercial_terms") or {}).get("quote_validity_days"), 30))
         for para in paras:
             _replace_in_para(para, "valid for 30 days", f"valid for {validity} days")
+
+        # ── Zone 5: approved structural decisions ─────────────────────
+        struct_notes = ext.get("structural_notes") or []
+        _RESOLVED_SET = {"approved", "resolved", "confirmed"}
+        resolved_notes = [
+            n for n in struct_notes
+            if (n.get("status") or "").lower().strip() in _RESOLVED_SET
+        ]
+        if resolved_notes:
+            doc.add_paragraph("")
+            p = doc.add_paragraph()
+            p.add_run("Approved Structural Decisions").bold = True
+            for note in resolved_notes:
+                constraint = (note.get("constraint") or note.get("description") or "—").strip()
+                solution   = (note.get("proposed_solution") or "").strip()
+                line = f"{constraint} — {solution}" if solution else f"{constraint} — approved"
+                try:
+                    bp = doc.add_paragraph(style="List Bullet")
+                    bp.add_run(line)
+                except KeyError:
+                    doc.add_paragraph(f"  •  {line}")
+
+        # ── Zone 6: project technical assumptions ─────────────────────
+        specs        = ext.get("technical_specifications") or {}
+        wall_sys     = specs.get("wall_system") or {}
+        ins_w        = (specs.get("insulation") or {}).get("walls") or {}
+        ins_r        = (specs.get("insulation") or {}).get("roof") or {}
+        facade_spec  = specs.get("facade") or {}
+        roof_fin     = specs.get("roof_finish") or {}
+        foundation_spec = specs.get("foundation") or ext.get("foundation") or {}
+
+        assumptions = []
+        if wall_sys.get("material"):
+            t = f" {wall_sys['thickness_mm']}mm" if wall_sys.get("thickness_mm") else ""
+            assumptions.append(f"Wall system: {wall_sys['material']}{t}")
+        if ins_w.get("material"):
+            t = f" {ins_w['thickness_mm']}mm" if ins_w.get("thickness_mm") else ""
+            assumptions.append(f"Wall insulation: {ins_w['material']}{t}")
+        if ins_r.get("material"):
+            t = f" {ins_r['thickness_mm']}mm" if ins_r.get("thickness_mm") else ""
+            assumptions.append(f"Roof insulation: {ins_r['material']}{t}")
+        if facade_spec.get("material"):
+            assumptions.append(f"Facade: {facade_spec['material']}")
+        if roof_fin.get("type"):
+            color = f" ({roof_fin['color']})" if roof_fin.get("color") else ""
+            assumptions.append(f"Roof finish: {roof_fin['type']}{color}")
+        if foundation_spec.get("type"):
+            assumptions.append(f"Foundation: {foundation_spec['type']}")
+
+        if assumptions:
+            doc.add_paragraph("")
+            p = doc.add_paragraph()
+            p.add_run("Project Technical Assumptions").bold = True
+            for assumption in assumptions:
+                try:
+                    bp = doc.add_paragraph(style="List Bullet")
+                    bp.add_run(assumption)
+                except KeyError:
+                    doc.add_paragraph(f"  •  {assumption}")
 
         out = io.BytesIO()
         doc.save(out)
