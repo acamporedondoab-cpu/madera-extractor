@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es" translate="no">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google" content="notranslate">
-<title>Madera — Presupuestos</title>
+<title>QuoteFlow AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
@@ -28,7 +28,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 /* Header */
 .hdr{background:var(--bg-sidebar);border-bottom:1px solid #333;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .hdr-logo{width:28px;height:28px;background:var(--green-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
-.hdr-title{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+.hdr-brand{display:flex;align-items:center;gap:10px}
+.hdr-brand-text{display:flex;flex-direction:column;gap:1px}
+.hdr-brand-name{font-size:15px;font-weight:700;color:#fff;line-height:1}
+.hdr-brand-sub{font-size:10px;font-weight:400;color:rgba(255,255,255,0.38);letter-spacing:0.03em}
 .theme-btn{width:36px;height:36px;border:1px solid #444;border-radius:8px;background:transparent;cursor:pointer;font-size:16px;color:#fff;transition:background 0.15s ease,border-color 0.15s ease}
 .theme-btn:hover{background:rgba(255,255,255,0.08);border-color:#666}
 
@@ -38,10 +41,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 /* Sidebar */
 .sidebar{width:272px;flex-shrink:0;background:var(--bg-sidebar);border-right:1px solid #333;display:flex;flex-direction:column;overflow:hidden}
 .sb-header{padding:16px;border-bottom:1px solid #333;flex-shrink:0}
-.sb-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px}
+.sb-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0}
 .sb-list{flex:1;overflow-y:auto;padding:8px}
 .sb-list::-webkit-scrollbar{width:4px}
 .sb-list::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+
+/* Sidebar section labels */
+.sb-section-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.28);letter-spacing:0.08em;text-transform:uppercase;padding:10px 12px 5px;display:flex;align-items:center;gap:6px}
+.sb-section-label:first-child{padding-top:4px}
+.sb-section-approved{color:rgba(76,175,80,0.5)}
+.sb-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:15px;border-radius:7px;background:rgba(255,255,255,0.07);font-size:10px;font-weight:700;padding:0 5px;color:rgba(255,255,255,0.4)}
+.sb-section-approved .sb-count{background:rgba(76,175,80,0.12);color:rgba(76,175,80,0.65)}
 
 /* Project cards in sidebar */
 .proj-card{padding:12px;border-radius:8px;cursor:pointer;margin-bottom:4px;border:1px solid transparent;transition:background 0.15s ease,border-color 0.15s ease}
@@ -74,7 +84,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 .det-subtitle{font-size:13px;color:var(--text-secondary);margin-top:3px;font-family:'DM Sans',sans-serif}
 .det-actions{display:flex;gap:8px;flex-shrink:0}
 
-/* Buttons */
+/* Buttons — base */
 .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:transform 0.15s ease,filter 0.15s ease,box-shadow 0.15s ease;display:inline-flex;align-items:center;gap:6px}
 .btn:hover{transform:scale(1.025)}
 .btn:active{transform:scale(0.96)}
@@ -85,10 +95,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 .btn-ghost:hover{filter:brightness(1.2);border-color:var(--text-secondary)}
 .btn-amber{background:rgba(255,193,7,0.12);color:#FFC107;border:1px solid rgba(255,193,7,0.3)}
 .btn-amber:hover{filter:brightness(1.15)}
-.btn-blue{background:rgba(33,150,243,0.12);color:#2196F3;border:1px solid rgba(33,150,243,0.3)}
-.btn-blue:hover{filter:brightness(1.15)}
-.btn-teal{background:rgba(0,188,212,0.12);color:#00BCD4;border:1px solid rgba(0,188,212,0.3)}
-.btn-teal:hover{filter:brightness(1.15)}
+
+/* Action button styles */
+.btn-excel{background:#FFFFFF;color:#2E7D32;border:1.5px solid #4CAF50}
+.btn-excel:hover:not(:disabled){background:#F1F8E9;box-shadow:0 2px 8px rgba(76,175,80,0.25);transform:scale(1.025)}
+.btn-word-offer{background:#FFFFFF;color:#1565C0;border:1.5px solid #2196F3}
+.btn-word-offer:hover:not(:disabled){background:#E3F2FD;box-shadow:0 2px 8px rgba(33,150,243,0.25);transform:scale(1.025)}
+.btn-clarify{background:#F44336;color:#FFFFFF;border:none}
+.btn-clarify:hover:not(:disabled){background:#E53935;box-shadow:0 4px 12px rgba(244,67,54,0.35)}
+.btn-approve-action{background:#FFFFFF;color:#2E7D32;border:1.5px solid #4CAF50}
+.btn-approve-action:hover:not(:disabled){background:#F1F8E9;box-shadow:0 2px 8px rgba(76,175,80,0.25);transform:scale(1.025)}
+.btn-approve-action:disabled{background:#E8F5E9;color:#4CAF50;border-color:#A5D6A7;opacity:1}
 
 /* Tabs */
 .tab-nav{display:flex}
@@ -240,9 +257,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 <body>
 
 <header class="hdr">
-  <div class="hdr-title">
-    <div class="hdr-logo">M</div>
-    Madera — Sistema de Presupuestos
+  <div class="hdr-brand">
+    <div class="hdr-logo">Q</div>
+    <div class="hdr-brand-text">
+      <div class="hdr-brand-name">QuoteFlow AI</div>
+      <div class="hdr-brand-sub">AI-Powered Quotation Management Platform</div>
+    </div>
   </div>
   <button class="theme-btn" id="themeBtn">☀️</button>
 </header>
@@ -250,17 +270,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 <div class="layout">
   <aside class="sidebar">
     <div class="sb-header">
-      <div class="sb-label">Proyectos recibidos</div>
+      <div class="sb-label">Projects</div>
     </div>
     <div class="sb-list" id="sbList">
-      <div style="padding:16px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center">Cargando...</div>
+      <div style="padding:16px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center">Loading...</div>
     </div>
   </aside>
 
   <main class="main">
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">📋</div>
-      <div class="empty-text">Selecciona un proyecto para revisar</div>
+      <div class="empty-text">Select a project to review</div>
     </div>
 
     <div class="detail" id="detail">
@@ -271,18 +291,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
             <div class="det-subtitle" id="detSub">—</div>
           </div>
           <div class="det-actions">
-            <a id="btnExcel"  class="btn btn-blue"    style="display:none;text-decoration:none" download>↓ Excel</a>
-            <a id="btnWord"   class="btn btn-teal"    style="display:none;text-decoration:none" download>↓ Oferta Word</a>
-            <button class="btn btn-amber" onclick="openClarify()">? Clarificar</button>
-            <button class="btn btn-primary" id="btnApprove" onclick="approveProject()">✓ Aprobar</button>
+            <a id="btnExcel"  class="btn btn-excel"      style="display:none;text-decoration:none" download>↓ Excel</a>
+            <a id="btnWord"   class="btn btn-word-offer"  style="display:none;text-decoration:none" download>↓ Word Offer</a>
+            <button class="btn btn-clarify" onclick="openClarify()">? Clarify</button>
+            <button class="btn btn-approve-action" id="btnApprove" onclick="approveProject()">✓ Approve</button>
           </div>
         </div>
         <nav class="tab-nav">
-          <button class="tab-btn active" onclick="switchTab('overview',this)">Resumen</button>
-          <button class="tab-btn" onclick="switchTab('dims',this)">Dimensiones</button>
-          <button class="tab-btn" onclick="switchTab('specs',this)">Especificaciones</button>
-          <button class="tab-btn" onclick="switchTab('decision',this)">Decisión</button>
-          <button class="tab-btn" onclick="switchTab('docs',this)" id="tabBtnDocs">Documentos</button>
+          <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+          <button class="tab-btn" onclick="switchTab('dims',this)">Dimensions</button>
+          <button class="tab-btn" onclick="switchTab('specs',this)">Specifications</button>
+          <button class="tab-btn" onclick="switchTab('decision',this)">Decisions</button>
+          <button class="tab-btn" onclick="switchTab('docs',this)" id="tabBtnDocs">Documents</button>
         </nav>
       </div>
 
@@ -300,11 +320,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 <!-- Clarify modal -->
 <div class="modal-overlay" id="clarifyModal" onclick="if(event.target===this)closeClarify()">
   <div class="modal" style="width:520px">
-    <div class="modal-title">Solicitar Clarificación</div>
+    <div class="modal-title">Request Clarification</div>
 
     <!-- Contact card -->
     <div id="clarifyContact" style="background:var(--bg-primary);border:1px solid var(--border-color);border-radius:10px;padding:14px 16px;margin-bottom:16px">
-      <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Contacto</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Contact</div>
       <div style="display:flex;flex-direction:column;gap:6px">
         <div style="display:flex;align-items:center;gap:10px;font-size:13px">
           <span style="font-size:15px">✉</span>
@@ -317,11 +337,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
       </div>
     </div>
 
-    <div class="modal-desc" style="margin-bottom:10px">Redacta el mensaje que quieres enviar al remitente. Se abrirá tu cliente de correo listo para enviar.</div>
-    <textarea class="modal-ta" id="clarifyNote" style="height:130px" placeholder="Ej: Para poder preparar el presupuesto necesito confirmar el tipo de cimentación y la solución para el vano de 6.4m..."></textarea>
+    <div class="modal-desc" style="margin-bottom:10px">Write the message you want to send to the sender. Your email client will open ready to send.</div>
+    <textarea class="modal-ta" id="clarifyNote" style="height:130px" placeholder="e.g. To prepare the quote I need to confirm the foundation type and the solution for the 6.4m span..."></textarea>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeClarify()">Cancelar</button>
-      <button class="btn btn-amber" onclick="submitClarify()">✉ Enviar</button>
+      <button class="btn btn-ghost" onclick="closeClarify()">Cancel</button>
+      <button class="btn btn-amber" onclick="submitClarify()">✉ Send</button>
     </div>
   </div>
 </div>
@@ -331,31 +351,31 @@ body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--tex
 <script>
 // ── FIELD REGISTRY (missing field name → json path + input config) ────────────
 const FIELD_REG = {
-  "foundation type":              {path:"technical_specifications.foundation.type",              type:"text",   label:"Tipo de cimentación"},
-  "foundation_type":              {path:"technical_specifications.foundation.type",              type:"text",   label:"Tipo de cimentación"},
-  "facade material":              {path:"technical_specifications.facade.material",              type:"text",   label:"Material fachada"},
-  "facade_material":              {path:"technical_specifications.facade.material",              type:"text",   label:"Material fachada"},
-  "internal walls material":      {path:"technical_specifications.internal_walls.material",      type:"text",   label:"Material paredes interiores"},
-  "internal_walls_material":      {path:"technical_specifications.internal_walls.material",      type:"text",   label:"Material paredes interiores"},
-  "roof finish":                  {path:"technical_specifications.roof_finish.type",             type:"text",   label:"Acabado cubierta"},
-  "roof_finish":                  {path:"technical_specifications.roof_finish.type",             type:"text",   label:"Acabado cubierta"},
-  "wall system":                  {path:"technical_specifications.wall_system.material",         type:"text",   label:"Sistema de pared"},
-  "wall_material":                {path:"technical_specifications.wall_system.material",         type:"text",   label:"Sistema de pared"},
-  "wall thickness":               {path:"technical_specifications.wall_system.thickness_mm",     type:"number", unit:"mm",  label:"Espesor pared"},
-  "insulation walls thickness":   {path:"technical_specifications.insulation.walls.thickness_mm",type:"number", unit:"mm",  label:"Espesor aislamiento paredes"},
-  "insulation roof thickness":    {path:"technical_specifications.insulation.roof.thickness_mm", type:"number", unit:"mm",  label:"Espesor aislamiento cubierta"},
-  "roof projected area":          {path:"building_geometry.roof.projected_area_m2",              type:"number", unit:"m²",  label:"Área proyectada cubierta"},
-  "roof_projected_area_m2":       {path:"building_geometry.roof.projected_area_m2",              type:"number", unit:"m²",  label:"Área proyectada cubierta"},
-  "gutter length":                {path:"building_geometry.roof.gutter_length_m",                type:"number", unit:"m",   label:"Longitud canalón"},
-  "gutter_length_m":              {path:"building_geometry.roof.gutter_length_m",                type:"number", unit:"m",   label:"Longitud canalón"},
-  "roof pitch":                   {path:"building_geometry.roof.pitch_degrees",                  type:"number", unit:"°",   label:"Pendiente cubierta"},
-  "window count":                 {path:"building_geometry.windows.count",                       type:"number", unit:"ud.", label:"Número de ventanas"},
-  "window area":                  {path:"building_geometry.windows.total_area_m2",               type:"number", unit:"m²",  label:"Área total ventanas"},
-  "total area":                   {path:"building_dimensions.total_area_m2",                     type:"number", unit:"m²",  label:"Área total"},
-  "plot area":                    {path:"building_dimensions.plot_area_m2",                      type:"number", unit:"m²",  label:"Área parcela"},
-  "6.4m span solution details":   {path:"_structural_note_solution",                             type:"text",   label:"Solución vano 6.4m"},
-  "6.4m_span_solution":           {path:"_structural_note_solution",                             type:"text",   label:"Solución vano 6.4m"},
-  "span solution":                {path:"_structural_note_solution",                             type:"text",   label:"Solución vano estructural"},
+  "foundation type":              {path:"technical_specifications.foundation.type",              type:"text",   label:"Foundation type"},
+  "foundation_type":              {path:"technical_specifications.foundation.type",              type:"text",   label:"Foundation type"},
+  "facade material":              {path:"technical_specifications.facade.material",              type:"text",   label:"Facade material"},
+  "facade_material":              {path:"technical_specifications.facade.material",              type:"text",   label:"Facade material"},
+  "internal walls material":      {path:"technical_specifications.internal_walls.material",      type:"text",   label:"Internal walls material"},
+  "internal_walls_material":      {path:"technical_specifications.internal_walls.material",      type:"text",   label:"Internal walls material"},
+  "roof finish":                  {path:"technical_specifications.roof_finish.type",             type:"text",   label:"Roof finish"},
+  "roof_finish":                  {path:"technical_specifications.roof_finish.type",             type:"text",   label:"Roof finish"},
+  "wall system":                  {path:"technical_specifications.wall_system.material",         type:"text",   label:"Wall system"},
+  "wall_material":                {path:"technical_specifications.wall_system.material",         type:"text",   label:"Wall system"},
+  "wall thickness":               {path:"technical_specifications.wall_system.thickness_mm",     type:"number", unit:"mm",  label:"Wall thickness"},
+  "insulation walls thickness":   {path:"technical_specifications.insulation.walls.thickness_mm",type:"number", unit:"mm",  label:"Wall insulation thickness"},
+  "insulation roof thickness":    {path:"technical_specifications.insulation.roof.thickness_mm", type:"number", unit:"mm",  label:"Roof insulation thickness"},
+  "roof projected area":          {path:"building_geometry.roof.projected_area_m2",              type:"number", unit:"m²",  label:"Roof projected area"},
+  "roof_projected_area_m2":       {path:"building_geometry.roof.projected_area_m2",              type:"number", unit:"m²",  label:"Roof projected area"},
+  "gutter length":                {path:"building_geometry.roof.gutter_length_m",                type:"number", unit:"m",   label:"Gutter length"},
+  "gutter_length_m":              {path:"building_geometry.roof.gutter_length_m",                type:"number", unit:"m",   label:"Gutter length"},
+  "roof pitch":                   {path:"building_geometry.roof.pitch_degrees",                  type:"number", unit:"°",   label:"Roof pitch"},
+  "window count":                 {path:"building_geometry.windows.count",                       type:"number", unit:"ud.", label:"Window count"},
+  "window area":                  {path:"building_geometry.windows.total_area_m2",               type:"number", unit:"m²",  label:"Window area"},
+  "total area":                   {path:"building_dimensions.total_area_m2",                     type:"number", unit:"m²",  label:"Total area"},
+  "plot area":                    {path:"building_dimensions.plot_area_m2",                      type:"number", unit:"m²",  label:"Plot area"},
+  "6.4m span solution details":   {path:"_structural_note_solution",                             type:"text",   label:"6.4m span solution"},
+  "6.4m_span_solution":           {path:"_structural_note_solution",                             type:"text",   label:"6.4m span solution"},
+  "span solution":                {path:"_structural_note_solution",                             type:"text",   label:"Structural span solution"},
 };
 
 // ── API ───────────────────────────────────────────────────────────
@@ -422,18 +442,19 @@ async function loadList(){
     const list = await API.get('/api/extractions');
     const el = document.getElementById('sbList');
     if(!list.length){
-      el.innerHTML = `<div style="padding:16px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center">No hay proyectos aún.<br>Envía un email con PDFs para empezar.</div>`;
+      el.innerHTML = `<div style="padding:16px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center">No projects yet.<br>Send an email with PDFs to get started.</div>`;
       return;
     }
-    el.innerHTML = list.map(e => {
+
+    function renderCard(e){
       const pct = e.completeness || 0;
       const col = pctColor(pct);
       const badge = e.approved
-        ? '<span class="badge badge-approved">Aprobado</span>'
+        ? '<span class="badge badge-approved">APPROVED</span>'
         : e.status === 'clarification_needed'
-        ? '<span class="badge badge-clarify">Clarificar</span>'
-        : '<span class="badge badge-pending">Pendiente</span>';
-      const loc = e.location && e.location !== 'Unknown' ? e.location : 'Sin ubicación';
+        ? '<span class="badge badge-clarify">CLARIFY</span>'
+        : '<span class="badge badge-pending">PENDING</span>';
+      const loc = e.location && e.location !== 'Unknown' ? e.location : 'No location';
       const cli = e.client && e.client !== 'Unknown' && e.client !== 'unknown' ? e.client : '';
       return `<div class="proj-card${currentId===e.id?' active':''}" onclick="loadProject('${e.id}')" data-id="${e.id}">
         <div class="proj-name">${loc}${cli?' — '+cli:''}</div>
@@ -444,8 +465,23 @@ async function loadList(){
           <span style="font-size:10px;font-weight:700;color:${col};font-family:'JetBrains Mono',monospace">${pct}%</span>
         </div>
       </div>`;
-    }).join('');
-  } catch(e){ toast('Error al cargar proyectos','error',e.message); }
+    }
+
+    const pending  = list.filter(e => !e.approved);
+    const approved = list.filter(e => e.approved);
+    let html = '';
+
+    if(pending.length){
+      html += `<div class="sb-section-label">Pending Review <span class="sb-count">${pending.length}</span></div>`;
+      html += pending.map(renderCard).join('');
+    }
+    if(approved.length){
+      html += `<div class="sb-section-label sb-section-approved">Approved <span class="sb-count">${approved.length}</span></div>`;
+      html += approved.map(renderCard).join('');
+    }
+
+    el.innerHTML = html;
+  } catch(e){ toast('Failed to load projects','error',e.message); }
 }
 
 // ── LOAD PROJECT ──────────────────────────────────────────────────
@@ -470,7 +506,7 @@ async function loadProject(id){
     document.querySelectorAll('.tab-btn')[0].classList.add('active');
 
     renderDetail(ext, raw);
-  } catch(e){ toast('Error al cargar proyecto','error',e.message); }
+  } catch(e){ toast('Failed to load project','error',e.message); }
 }
 
 function renderDetail(ext, raw){
@@ -493,18 +529,20 @@ function renderDetail(ext, raw){
   };
 
   // Header
-  const loc = p.location || 'Proyecto sin ubicación';
+  const loc = p.location || 'Project';
   const cli = p.client_name && p.client_name !== 'unknown' ? p.client_name : '';
   document.getElementById('detTitle').textContent = loc + (cli ? ' — ' + cli : '');
-  const dl = p.deadline ? `Plazo: ${p.deadline}${p.deadline_days_remaining!=null?' ('+p.deadline_days_remaining+' días)':''}` : 'Sin plazo definido';
-  document.getElementById('detSub').textContent = `${p.building_type||'Edificio'} · ${dl}`;
+  const dl = p.deadline
+    ? `Deadline: ${p.deadline}${p.deadline_days_remaining!=null?' ('+p.deadline_days_remaining+' days)':''}`
+    : 'No deadline defined';
+  document.getElementById('detSub').textContent = `${p.building_type||'Building'} · ${dl}`;
 
   const btn = document.getElementById('btnApprove');
   if(raw.approved){
-    btn.textContent = '✓ Aprobado'; btn.disabled = true;
+    btn.textContent = '✓ Approved'; btn.disabled = true;
     _showDownloadButtons(currentId);
   } else {
-    btn.textContent = '✓ Aprobar'; btn.disabled = false;
+    btn.textContent = '✓ Approve'; btn.disabled = false;
     _hideDownloadButtons();
   }
 
@@ -515,31 +553,31 @@ function renderDetail(ext, raw){
   const offset = circ - (circ * pct / 100);
 
   const briefHtml = ext.project_brief
-    ? `<div class="brief-card"><div class="brief-label">Contexto del Proyecto</div><div class="brief-text">${esc(ext.project_brief)}</div></div>`
+    ? `<div class="brief-card"><div class="brief-label">Project Context</div><div class="brief-text">${esc(ext.project_brief)}</div></div>`
     : '';
 
   document.getElementById('tab-overview').innerHTML = `
     ${briefHtml}
     <div class="g3" style="margin-bottom:16px">
-      <div class="card"><div class="card-label">Área Total</div><div class="kpi-val">${d.total_area_m2||'—'}<span class="kpi-unit">m²</span></div></div>
-      <div class="card"><div class="card-label">Parcela</div><div class="kpi-val">${d.plot_area_m2||'—'}<span class="kpi-unit">m²</span></div></div>
-      <div class="card"><div class="card-label">Completitud</div><div class="kpi-val" style="color:${col}">${pct}<span class="kpi-unit">%</span></div></div>
+      <div class="card"><div class="card-label">Total Area</div><div class="kpi-val">${d.total_area_m2||'—'}<span class="kpi-unit">m²</span></div></div>
+      <div class="card"><div class="card-label">Plot</div><div class="kpi-val">${d.plot_area_m2||'—'}<span class="kpi-unit">m²</span></div></div>
+      <div class="card"><div class="card-label">Completeness</div><div class="kpi-val" style="color:${col}">${pct}<span class="kpi-unit">%</span></div></div>
     </div>
     <div class="g2">
       <div class="card">
-        <div class="card-label">Información del Proyecto</div>
+        <div class="card-label">Project Information</div>
         <table class="dt">
-          <tr><td class="lbl" translate="no">Ubicación</td><td class="val">${p.location||'—'}</td></tr>
-          <tr><td class="lbl" translate="no">Cliente</td><td class="val">${cli||'—'}</td></tr>
-          <tr><td class="lbl" translate="no">Arquitecto</td><td class="val">${p.architect && p.architect!=='unknown'?p.architect:'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Location</td><td class="val">${p.location||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Client</td><td class="val">${cli||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Architect</td><td class="val">${p.architect && p.architect!=='unknown'?p.architect:'—'}</td></tr>
           <tr><td class="lbl" translate="no">Email</td><td class="val" style="font-size:11px;font-family:'DM Sans',sans-serif">${p.architect_email||'—'}</td></tr>
-          <tr><td class="lbl" translate="no">Plazo</td><td class="val">${p.deadline||'—'}</td></tr>
-          <tr><td class="lbl" translate="no">Días restantes</td><td class="val">${p.deadline_days_remaining!=null?p.deadline_days_remaining+' días':'—'}</td></tr>
-          <tr><td class="lbl" translate="no">Tipo de edificio</td><td class="val">${p.building_type||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Deadline</td><td class="val">${p.deadline||'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Days remaining</td><td class="val">${p.deadline_days_remaining!=null?p.deadline_days_remaining+' days':'—'}</td></tr>
+          <tr><td class="lbl" translate="no">Building type</td><td class="val">${p.building_type||'—'}</td></tr>
         </table>
       </div>
       <div class="card">
-        <div class="card-label">Confianza de Extracción</div>
+        <div class="card-label">Extraction Confidence</div>
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
           <div class="ring-wrap">
             <svg class="ring-svg" width="60" height="60" viewBox="0 0 60 60">
@@ -549,12 +587,12 @@ function renderDetail(ext, raw){
             <div class="ring-txt" style="color:${col}">${pct}%</div>
           </div>
           <div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:4px">Completitud General</div>
-            <div style="font-size:11px;color:var(--text-muted)">Áreas: <strong>${sc.areas_confidence||'—'}</strong></div>
-            <div style="font-size:11px;color:var(--text-muted)">Especificaciones: <strong>${sc.specs_confidence||'—'}</strong></div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px">Overall Completeness</div>
+            <div style="font-size:11px;color:var(--text-muted)">Areas: <strong>${sc.areas_confidence||'—'}</strong></div>
+            <div style="font-size:11px;color:var(--text-muted)">Specifications: <strong>${sc.specs_confidence||'—'}</strong></div>
           </div>
         </div>
-        ${mf.length ? `<div class="card-label">Campos faltantes</div>${mf.map(m=>`<div style="font-size:12px;color:#FFC107;padding:2px 0;font-family:'DM Sans',sans-serif">⚠ ${m}</div>`).join('')}` : '<div style="font-size:12px;color:#4CAF50">✓ Sin campos críticos faltantes</div>'}
+        ${mf.length ? `<div class="card-label">Missing fields</div>${mf.map(m=>`<div style="font-size:12px;color:#FFC107;padding:2px 0;font-family:'DM Sans',sans-serif">⚠ ${m}</div>`).join('')}` : '<div style="font-size:12px;color:#4CAF50">✓ No critical fields missing</div>'}
       </div>
     </div>`;
 
@@ -563,48 +601,48 @@ function renderDetail(ext, raw){
   document.getElementById('tab-dims').innerHTML = `
     <div class="g2" style="margin-bottom:16px">
       <div class="card">
-        <div class="card-label">Superficies</div>
+        <div class="card-label">Floor Areas</div>
         <table class="dt">
-          <tr><td class="lbl">Planta baja</td><td class="val">${d.ground_floor_area_m2!=null?d.ground_floor_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Primera planta</td><td class="val">${d.first_floor_area_m2!=null?d.first_floor_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Ático</td><td class="val">${d.attic_area_m2!=null?d.attic_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Terraza</td><td class="val">${d.terrace_area_m2!=null?d.terrace_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Ground floor</td><td class="val">${d.ground_floor_area_m2!=null?d.ground_floor_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">First floor</td><td class="val">${d.first_floor_area_m2!=null?d.first_floor_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Attic</td><td class="val">${d.attic_area_m2!=null?d.attic_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Terrace</td><td class="val">${d.terrace_area_m2!=null?d.terrace_area_m2+' m²':'—'}</td></tr>
           <tr class="total"><td class="lbl">TOTAL</td><td class="val">${d.total_area_m2!=null?d.total_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Parcela</td><td class="val">${d.plot_area_m2!=null?d.plot_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Plot</td><td class="val">${d.plot_area_m2!=null?d.plot_area_m2+' m²':'—'}</td></tr>
         </table>
       </div>
       <div class="card">
-        <div class="card-label">Geometría</div>
+        <div class="card-label">Geometry</div>
         <table class="dt">
-          <tr><th colspan="2" class="section">Planta Baja</th></tr>
+          <tr><th colspan="2" class="section">Ground Floor</th></tr>
           <tr><td class="lbl">Habitable</td><td class="val">${gf.habitable_area_m2!=null?gf.habitable_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Perímetro ext.</td><td class="val">${gf.ext_perimeter_m!=null?gf.ext_perimeter_m+' m':'—'}</td></tr>
-          <tr><td class="lbl">Paredes int.</td><td class="val">${gf.int_walls_length_m!=null?gf.int_walls_length_m+' m':'—'}</td></tr>
-          <tr><th colspan="2" class="section">Primera Planta</th></tr>
+          <tr><td class="lbl">Ext. perimeter</td><td class="val">${gf.ext_perimeter_m!=null?gf.ext_perimeter_m+' m':'—'}</td></tr>
+          <tr><td class="lbl">Int. walls</td><td class="val">${gf.int_walls_length_m!=null?gf.int_walls_length_m+' m':'—'}</td></tr>
+          <tr><th colspan="2" class="section">First Floor</th></tr>
           <tr><td class="lbl">Habitable</td><td class="val">${ff.habitable_area_m2!=null?ff.habitable_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Terraza</td><td class="val">${ff.terrace_area_m2!=null?ff.terrace_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Perímetro ext.</td><td class="val">${ff.ext_perimeter_m!=null?ff.ext_perimeter_m+' m':'—'}</td></tr>
-          <tr><td class="lbl">Paredes int.</td><td class="val">${ff.int_walls_length_m!=null?ff.int_walls_length_m+' m':'—'}</td></tr>
-          <tr><th colspan="2" class="section">Ático</th></tr>
-          <tr><td class="lbl">Superficie</td><td class="val">${attic.area_m2!=null?attic.area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Terrace</td><td class="val">${ff.terrace_area_m2!=null?ff.terrace_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Ext. perimeter</td><td class="val">${ff.ext_perimeter_m!=null?ff.ext_perimeter_m+' m':'—'}</td></tr>
+          <tr><td class="lbl">Int. walls</td><td class="val">${ff.int_walls_length_m!=null?ff.int_walls_length_m+' m':'—'}</td></tr>
+          <tr><th colspan="2" class="section">Attic</th></tr>
+          <tr><td class="lbl">Area</td><td class="val">${attic.area_m2!=null?attic.area_m2+' m²':'—'}</td></tr>
         </table>
       </div>
     </div>
     <div class="g2">
       <div class="card">
-        <div class="card-label">Cubierta</div>
+        <div class="card-label">Roof</div>
         <table class="dt">
-          <tr><td class="lbl">Área proyectada</td><td class="val">${roof.projected_area_m2!=null?roof.projected_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Pendiente</td><td class="val">${roof.pitch_degrees!=null?roof.pitch_degrees+'°':'—'}</td></tr>
-          <tr><td class="lbl">Canalón</td><td class="val">${roof.gutter_length_m!=null?roof.gutter_length_m+' m':'—'}</td></tr>
+          <tr><td class="lbl">Projected area</td><td class="val">${roof.projected_area_m2!=null?roof.projected_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Pitch</td><td class="val">${roof.pitch_degrees!=null?roof.pitch_degrees+'°':'—'}</td></tr>
+          <tr><td class="lbl">Gutter</td><td class="val">${roof.gutter_length_m!=null?roof.gutter_length_m+' m':'—'}</td></tr>
         </table>
       </div>
       <div class="card">
-        <div class="card-label">Ventanas</div>
+        <div class="card-label">Windows</div>
         <table class="dt">
-          <tr><td class="lbl">Cantidad</td><td class="val">${win.count!=null?win.count+' ud.':'—'}</td></tr>
-          <tr><td class="lbl">Área total</td><td class="val">${win.total_area_m2!=null?win.total_area_m2+' m²':'—'}</td></tr>
-          <tr><td class="lbl">Tipo</td><td class="val" style="font-family:'DM Sans',sans-serif">${win.type||'—'}</td></tr>
+          <tr><td class="lbl">Count</td><td class="val">${win.count!=null?win.count+' ud.':'—'}</td></tr>
+          <tr><td class="lbl">Total area</td><td class="val">${win.total_area_m2!=null?win.total_area_m2+' m²':'—'}</td></tr>
+          <tr><td class="lbl">Type</td><td class="val" style="font-family:'DM Sans',sans-serif">${win.type||'—'}</td></tr>
         </table>
       </div>
     </div>`;
@@ -614,112 +652,110 @@ function renderDetail(ext, raw){
   document.getElementById('tab-specs').innerHTML = `
     <div class="g2" style="margin-bottom:16px">
       <div class="card">
-        <div class="card-label">Sistema de Pared</div>
+        <div class="card-label">Wall System</div>
         <table class="dt">
           <tr><td class="lbl">Material</td><td class="val" style="font-family:'DM Sans',sans-serif">${wall.material||'—'}</td></tr>
-          <tr><td class="lbl">Espesor</td><td class="val">${wall.thickness_mm?wall.thickness_mm+' mm':'—'}</td></tr>
-          <tr><td class="lbl">Estado</td><td class="val">${sdot(wall.status)}</td></tr>
+          <tr><td class="lbl">Thickness</td><td class="val">${wall.thickness_mm?wall.thickness_mm+' mm':'—'}</td></tr>
+          <tr><td class="lbl">Status</td><td class="val">${sdot(wall.status)}</td></tr>
         </table>
       </div>
       <div class="card">
-        <div class="card-label">Aislamiento — Paredes</div>
+        <div class="card-label">Insulation — Walls</div>
         <table class="dt">
           <tr><td class="lbl">Material</td><td class="val" style="font-family:'DM Sans',sans-serif">${iw.material||'—'}</td></tr>
-          <tr><td class="lbl">Espesor</td><td class="val">${iw.thickness_mm?iw.thickness_mm+' mm':'—'}</td></tr>
-          <tr><td class="lbl">Estado</td><td class="val">${sdot(iw.status)}</td></tr>
+          <tr><td class="lbl">Thickness</td><td class="val">${iw.thickness_mm?iw.thickness_mm+' mm':'—'}</td></tr>
+          <tr><td class="lbl">Status</td><td class="val">${sdot(iw.status)}</td></tr>
         </table>
       </div>
       <div class="card">
-        <div class="card-label">Aislamiento — Cubierta</div>
+        <div class="card-label">Insulation — Roof</div>
         <table class="dt">
           <tr><td class="lbl">Material</td><td class="val" style="font-family:'DM Sans',sans-serif">${ir.material||'—'}</td></tr>
-          <tr><td class="lbl">Espesor</td><td class="val">${ir.thickness_mm?ir.thickness_mm+' mm':'—'}</td></tr>
-          <tr><td class="lbl">Estado</td><td class="val">${sdot(ir.status)}</td></tr>
+          <tr><td class="lbl">Thickness</td><td class="val">${ir.thickness_mm?ir.thickness_mm+' mm':'—'}</td></tr>
+          <tr><td class="lbl">Status</td><td class="val">${sdot(ir.status)}</td></tr>
         </table>
       </div>
       <div class="card">
-        <div class="card-label">Fachada y Acabado</div>
+        <div class="card-label">Facade &amp; Finish</div>
         <table class="dt">
-          <tr><td class="lbl">Fachada</td><td class="val" style="font-family:'DM Sans',sans-serif">${fac.material||'—'}</td></tr>
-          <tr><td class="lbl">Estado</td><td class="val">${sdot(fac.status)}</td></tr>
-          <tr><td class="lbl">Acabado cubierta</td><td class="val" style="font-family:'DM Sans',sans-serif">${rf.type||'—'}</td></tr>
-          <tr><td class="lbl">Estado</td><td class="val">${sdot(rf.status)}</td></tr>
+          <tr><td class="lbl">Facade</td><td class="val" style="font-family:'DM Sans',sans-serif">${fac.material||'—'}</td></tr>
+          <tr><td class="lbl">Status</td><td class="val">${sdot(fac.status)}</td></tr>
+          <tr><td class="lbl">Roof finish</td><td class="val" style="font-family:'DM Sans',sans-serif">${rf.type||'—'}</td></tr>
+          <tr><td class="lbl">Status</td><td class="val">${sdot(rf.status)}</td></tr>
           <tr><td class="lbl">Color</td><td class="val" style="font-family:'DM Sans',sans-serif">${rf.color||'—'}</td></tr>
         </table>
       </div>
     </div>
     <div class="card" style="max-width:400px">
-      <div class="card-label">Paredes Interiores</div>
+      <div class="card-label">Internal Walls</div>
       <table class="dt">
         <tr><td class="lbl">Material</td><td class="val" style="font-family:'DM Sans',sans-serif">${intW.material && intW.material!=='unknown'?intW.material:'—'}</td></tr>
-        <tr><td class="lbl">Longitud total</td><td class="val">${intW.length_m?intW.length_m+' m':'—'}</td></tr>
+        <tr><td class="lbl">Total length</td><td class="val">${intW.length_m?intW.length_m+' m':'—'}</td></tr>
       </table>
     </div>`;
 
   // ── DOCUMENTS ─────────────────────────────────────────────────
   const attachments = raw.pdf_attachments || [];
-  // Fallback: if storage upload failed, at least show the PDF filenames extracted from the email
   const pdfNamesFallback = ((raw.source_data || {}).pdf_names || []);
   const emailBody = (raw.source_data || {}).email_text || '';
   const tabBtnDocs = document.getElementById('tabBtnDocs');
   const emailCard = emailBody
     ? `<div class="card" style="flex-shrink:0">
-        <div class="card-label">Email original</div>
+        <div class="card-label">Original Email</div>
         <div class="email-body">${esc(emailBody)}</div>
       </div>`
     : '';
 
   if(attachments.length){
-    tabBtnDocs.textContent = `Documentos (${attachments.length})`;
+    tabBtnDocs.textContent = `Documents (${attachments.length})`;
     const btnHtml = attachments.map(a =>
       `<button class="doc-btn" data-name="${esc(a.name)}" onclick="viewPdf('${a.url}','${esc(a.name)}')">${esc(a.name)}</button>`
     ).join('');
     document.getElementById('tab-docs').innerHTML = `
       <div class="docs-layout">
         <div class="card" style="flex-shrink:0">
-          <div class="card-label">Documentos adjuntos</div>
+          <div class="card-label">Attached documents</div>
           <div class="doc-list">${btnHtml}</div>
         </div>
         <div class="pdf-frame-wrap" id="pdfViewer">
           <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px">
-            Selecciona un documento para verlo
+            Select a document to view
           </div>
         </div>
         ${emailCard}
       </div>`;
     setTimeout(() => viewPdf(attachments[0].url, attachments[0].name), 50);
   } else if(pdfNamesFallback.length) {
-    // Storage upload failed but extraction succeeded — show names as non-clickable chips
-    tabBtnDocs.textContent = `Documentos (${pdfNamesFallback.length})`;
+    tabBtnDocs.textContent = `Documents (${pdfNamesFallback.length})`;
     const chipHtml = pdfNamesFallback.map(n =>
-      `<div class="doc-btn" style="cursor:default;opacity:0.7" title="Archivo procesado pero no almacenado en la nube">${esc(n)}</div>`
+      `<div class="doc-btn" style="cursor:default;opacity:0.7" title="File processed but not stored in the cloud">${esc(n)}</div>`
     ).join('');
     document.getElementById('tab-docs').innerHTML = `
       <div class="docs-layout">
         <div class="card" style="flex-shrink:0">
-          <div class="card-label">Documentos procesados</div>
+          <div class="card-label">Processed documents</div>
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">
-            Estos PDFs fueron extraídos correctamente pero no se guardaron en la nube.
-            Para ver los archivos, configura <code>SUPABASE_SERVICE_KEY</code> en Railway.
+            These PDFs were extracted successfully but were not saved to the cloud.
+            To view the files, set <code>SUPABASE_SERVICE_KEY</code> in Railway.
           </div>
           <div class="doc-list">${chipHtml}</div>
         </div>
         ${emailCard}
       </div>`;
   } else {
-    tabBtnDocs.textContent = 'Documentos';
+    tabBtnDocs.textContent = 'Documents';
     document.getElementById('tab-docs').innerHTML = `
       <div class="docs-layout">
         <div class="card" style="text-align:center;padding:40px 24px;flex-shrink:0">
           <div style="font-size:32px;opacity:0.2;margin-bottom:12px">📎</div>
-          <div style="font-size:13px;color:var(--text-muted)">No hay documentos PDF adjuntos para este proyecto.</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Los PDFs enviados por email aparecerán aquí automáticamente.</div>
+          <div style="font-size:13px;color:var(--text-muted)">No PDF documents attached to this project.</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">PDFs sent by email will appear here automatically.</div>
         </div>
         ${emailCard}
       </div>`;
   }
 
-  // ── DECISION ──────────────────────────────────────────────────
+  // ── DECISIONS ─────────────────────────────────────────────────
   const missingForm = mf.length ? `
     <form id="missingFieldsForm" onsubmit="saveMissingFields(event)">
       ${mf.map(fieldName => {
@@ -731,16 +767,16 @@ function renderDetail(ext, raw){
           <div class="field-input-row">
             <input class="field-input" type="${reg.type}" step="${isNum?'any':''}"
               data-field="${esc(fieldName)}" data-path="${esc(reg.path)}"
-              placeholder="${isNum ? '0' : 'Escribe aquí...'}">
+              placeholder="${isNum ? '0' : 'Enter value...'}">
             ${reg.unit ? `<span class="field-unit">${reg.unit}</span>` : '<span class="field-unit"></span>'}
           </div>
         </div>`;
       }).join('')}
       <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px;justify-content:center" id="btnSaveFields">
-        Guardar cambios
+        Save changes
       </button>
     </form>
-  ` : '<div style="font-size:13px;color:#4CAF50;padding:4px 0">✓ Sin campos críticos faltantes</div>';
+  ` : '<div style="font-size:13px;color:#4CAF50;padding:4px 0">✓ No critical fields missing</div>';
 
   const _NOTE_UNRESOLVED = new Set(["flagged for decision","flagged","pending","unresolved"]);
   function _noteCard(n, idx){
@@ -750,21 +786,21 @@ function renderDetail(ext, raw){
     const noteClass    = isUnresolved ? "str-flagged" : isResolved ? "str-resolved" : "str-neutral";
     const titleClass   = isUnresolved ? "str-t-flagged" : isResolved ? "str-t-resolved" : "str-t-neutral";
     const badgeClass   = isUnresolved ? "sbadge-flagged" : isResolved ? "sbadge-resolved" : "sbadge-neutral";
-    const badgeLabel   = isUnresolved ? "Pendiente" : isResolved ? "Resuelto" : (n.status||"—");
+    const badgeLabel   = isUnresolved ? "Pending" : isResolved ? "Resolved" : (n.status||"—");
     const solHtml      = (!isUnresolved && n.proposed_solution)
       ? `<div class="str-solution">→ ${esc(n.proposed_solution)}</div>` : "";
     const tsHtml       = n.resolved_at
-      ? `<div class="str-resolved-at">Resuelto: ${n.resolved_at.replace("T"," ").slice(0,19)}</div>` : "";
+      ? `<div class="str-resolved-at">Resolved: ${n.resolved_at.replace("T"," ").slice(0,19)}</div>` : "";
     const formHtml     = isUnresolved ? `
       <div class="str-resolve-form">
         <input class="str-resolve-input" type="text" id="note-sol-${idx}"
-          placeholder="Solución acordada (ej: viga GL24h 240×480mm)..."
+          placeholder="Agreed solution (e.g. GL24h 240×480mm beam)..."
           value="${esc(n.proposed_solution||'')}">
         <button class="str-resolve-btn"
-          onclick="resolveNote(${idx},${JSON.stringify(n.constraint||'')})">Resolver</button>
+          onclick="resolveNote(${idx},${JSON.stringify(n.constraint||'')})">Resolve</button>
       </div>` : "";
     return `<div class="str-note ${noteClass}" id="str-note-card-${idx}">
-      <div class="str-title ${titleClass}">${esc(n.constraint||"Nota estructural")}
+      <div class="str-title ${titleClass}">${esc(n.constraint||"Structural note")}
         <span class="str-status-badge ${badgeClass}">${badgeLabel}</span>
       </div>
       ${n.description?`<div class="str-desc">${esc(n.description)}</div>`:""}
@@ -773,37 +809,37 @@ function renderDetail(ext, raw){
   }
   const structHtml = sn.length
     ? sn.map((n,i)=>_noteCard(n,i)).join('')
-    : '<div style="font-size:13px;color:var(--text-muted)">Sin notas estructurales.</div>';
+    : '<div style="font-size:13px;color:var(--text-muted)">No structural notes.</div>';
 
   document.getElementById('tab-decision').innerHTML = `
     <div class="g2">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div class="card">
-          <div class="card-label">Campos Faltantes${mf.length ? ` <span style="font-size:10px;color:#FFC107;font-weight:700">(${mf.length} pendientes)</span>` : ''}</div>
-          ${mf.length ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;font-family:\'DM Sans\',sans-serif">Rellena los campos que conoces y haz clic en Guardar.</div>' : ''}
+          <div class="card-label">Missing Fields${mf.length ? ` <span style="font-size:10px;color:#FFC107;font-weight:700">(${mf.length} pending)</span>` : ''}</div>
+          ${mf.length ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;font-family:\'DM Sans\',sans-serif">Fill in the fields you know and click Save.</div>' : ''}
           ${missingForm}
         </div>
         <div class="card">
-          <div class="card-label">Notas Estructurales</div>
+          <div class="card-label">Structural Notes</div>
           ${structHtml}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div class="card">
-          <div class="card-label">Alcance</div>
-          <div style="font-size:10px;font-weight:700;color:#4CAF50;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">Incluido</div>
+          <div class="card-label">Scope</div>
+          <div style="font-size:10px;font-weight:700;color:#4CAF50;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">Included</div>
           <ul class="scope-list scope-in">${(scope.in_scope||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
-          <div style="font-size:10px;font-weight:700;color:#F44336;letter-spacing:0.06em;text-transform:uppercase;margin:12px 0 6px">Excluido</div>
+          <div style="font-size:10px;font-weight:700;color:#F44336;letter-spacing:0.06em;text-transform:uppercase;margin:12px 0 6px">Excluded</div>
           <ul class="scope-list scope-out">${(scope.out_of_scope||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
         </div>
         <div class="card">
-          <div class="card-label">Condiciones Comerciales</div>
+          <div class="card-label">Commercial Terms</div>
           <table class="dt">
-            <tr><td class="lbl">Margen</td><td class="val">${cm.margin_percent?cm.margin_percent+'%':'—'}</td></tr>
-            <tr><td class="lbl">IVA</td><td class="val">${cm.vat_rate_percent?cm.vat_rate_percent+'%':'—'}</td></tr>
-            <tr><td class="lbl">Validez oferta</td><td class="val">${cm.quote_validity_days?cm.quote_validity_days+' días':'—'}</td></tr>
-            <tr><td class="lbl">Condiciones pago</td><td class="val">${cm.payment_terms||'—'}</td></tr>
-            <tr><td class="lbl">Moneda</td><td class="val">${cm.currency||'EUR'}</td></tr>
+            <tr><td class="lbl">Margin</td><td class="val">${cm.margin_percent?cm.margin_percent+'%':'—'}</td></tr>
+            <tr><td class="lbl">VAT</td><td class="val">${cm.vat_rate_percent?cm.vat_rate_percent+'%':'—'}</td></tr>
+            <tr><td class="lbl">Quote validity</td><td class="val">${cm.quote_validity_days?cm.quote_validity_days+' days':'—'}</td></tr>
+            <tr><td class="lbl">Payment terms</td><td class="val">${cm.payment_terms||'—'}</td></tr>
+            <tr><td class="lbl">Currency</td><td class="val">${cm.currency||'EUR'}</td></tr>
           </table>
         </div>
       </div>
@@ -840,47 +876,45 @@ function _hideDownloadButtons(){
 async function approveProject(){
   if(!currentId) return;
   const btn = document.getElementById('btnApprove');
-  btn.innerHTML = '<span class="spinner"></span> Aprobando...';
+  btn.innerHTML = '<span class="spinner"></span> Approving...';
   btn.disabled = true;
   try {
     const resp = await fetch(`/api/extractions/${currentId}/approve`, {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
     const json = await resp.json();
     if(resp.status === 409){
-      // Unresolved engineering decisions — list them for the user
       const items = (json.unresolved_items || []).map(s => `• ${s}`).join('\n');
-      toast('No se puede aprobar — hay decisiones sin resolver','error',
-        `Resuelve estas decisiones en la pestaña Decisión primero:\n${items}`);
-      btn.textContent = '✓ Aprobar';
+      toast('Cannot approve — unresolved decisions','error',
+        `Resolve these in the Decisions tab first:\n${items}`);
+      btn.textContent = '✓ Approve';
       btn.disabled = false;
       return;
     }
-    if(!resp.ok) throw new Error(json.error || 'Error desconocido');
-    toast('Proyecto aprobado','success','Descarga el Excel y la Oferta Word con los botones de arriba.');
-    btn.textContent = '✓ Aprobado';
+    if(!resp.ok) throw new Error(json.error || 'Unknown error');
+    toast('Project approved','success','Download the Excel and Word Offer using the buttons above.');
+    btn.textContent = '✓ Approved';
     btn.disabled = true;
     _showDownloadButtons(currentId);
     const card = document.querySelector(`[data-id="${currentId}"] .badge`);
-    if(card){ card.className = 'badge badge-approved'; card.textContent = 'Aprobado'; }
+    if(card){ card.className = 'badge badge-approved'; card.textContent = 'APPROVED'; }
   } catch(e){
-    toast('Error al aprobar','error', e.message);
-    btn.textContent = '✓ Aprobar';
+    toast('Failed to approve','error', e.message);
+    btn.textContent = '✓ Approve';
     btn.disabled = false;
   }
 }
 
 // ── CLARIFY ───────────────────────────────────────────────────────
-let _clarifyProject = {};   // {email, phone, location, buildingType}
+let _clarifyProject = {};
 
 function openClarify(){
   if(!currentId) return;
   document.getElementById('clarifyModal').classList.add('open');
 
-  // Populate contact card from last-loaded extraction
-  const emailEl   = document.getElementById('clarifyEmail');
-  const phoneEl   = document.getElementById('clarifyPhone');
-  const phoneRow  = document.getElementById('clarifyPhoneRow');
+  const emailEl  = document.getElementById('clarifyEmail');
+  const phoneEl  = document.getElementById('clarifyPhone');
+  const phoneRow = document.getElementById('clarifyPhoneRow');
 
-  emailEl.textContent  = _clarifyProject.email || 'Sin email registrado';
+  emailEl.textContent = _clarifyProject.email || 'No email on record';
   if(_clarifyProject.phone){
     phoneEl.textContent = _clarifyProject.phone;
     phoneRow.style.display = 'flex';
@@ -888,12 +922,11 @@ function openClarify(){
     phoneRow.style.display = 'none';
   }
 
-  // Pre-fill template if textarea is empty
   const ta = document.getElementById('clarifyNote');
   if(!ta.value.trim()){
-    const proj = _clarifyProject.location || 'el proyecto';
+    const proj = _clarifyProject.location || 'the project';
     const type = _clarifyProject.buildingType || '';
-    ta.value = `Hola,\n\nGracias por vuestra consulta${type ? ' para ' + type : ''} en ${proj}.\n\nPara poder preparar el presupuesto necesito la siguiente información adicional:\n\n- \n\nQuedo a vuestra disposición para cualquier duda.\n\nSaludos,\nJavier`;
+    ta.value = `Hello,\n\nThank you for your enquiry${type ? ' for ' + type : ''} in ${proj}.\n\nTo prepare the quotation I need the following additional information:\n\n- \n\nPlease don't hesitate to contact me with any questions.\n\nBest regards,\nJavier`;
   }
   ta.focus();
 }
@@ -906,22 +939,19 @@ function closeClarify(){
 async function submitClarify(){
   if(!currentId) return;
   const note = document.getElementById('clarifyNote').value.trim();
-  if(!note){ toast('Escribe un mensaje primero','warning'); return; }
+  if(!note){ toast('Write a message first','warning'); return; }
 
   const toEmail = _clarifyProject.email || '';
   const proj    = _clarifyProject.location || currentId;
 
-  // Save to Supabase (mark as clarification_needed)
   try { await API.post(`/api/extractions/${currentId}/clarify`, {note}); } catch(_){}
 
-  // Close modal and update UI before opening email client
   closeClarify();
-  toast('Cliente de correo abierto','success','El proyecto queda marcado como "Necesita clarificación".');
+  toast('Email client opened','success','The project has been marked as "Needs clarification".');
   const card = document.querySelector(`[data-id="${currentId}"] .badge`);
-  if(card){ card.className = 'badge badge-clarify'; card.textContent = 'Clarificar'; }
+  if(card){ card.className = 'badge badge-clarify'; card.textContent = 'CLARIFY'; }
 
-  // Open mailto: via hidden link — more reliable than location.href across browsers
-  const subject = encodeURIComponent(`Consulta presupuesto — ${proj}`);
+  const subject = encodeURIComponent(`Quote inquiry — ${proj}`);
   const body    = encodeURIComponent(note);
   const a = document.createElement('a');
   a.href = `mailto:${toEmail}?subject=${subject}&body=${body}`;
@@ -935,7 +965,7 @@ async function submitClarify(){
 async function saveMissingFields(e){
   e.preventDefault();
   const btn = document.getElementById('btnSaveFields');
-  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.innerHTML = '<span class="spinner"></span> Saving...';
   btn.disabled = true;
 
   const inputs = document.querySelectorAll('#missingFieldsForm [data-field]');
@@ -954,8 +984,8 @@ async function saveMissingFields(e){
   });
 
   if(!patches.length){
-    toast('Rellena al menos un campo','warning');
-    btn.textContent = 'Guardar cambios';
+    toast('Fill in at least one field','warning');
+    btn.textContent = 'Save changes';
     btn.disabled = false;
     return;
   }
@@ -968,12 +998,12 @@ async function saveMissingFields(e){
     }).then(r => r.json());
 
     if(res.error){ throw new Error(res.error); }
-    toast('Guardado', 'success', `${resolved.length} campo(s) actualizados · Completitud: ${res.completeness}%`);
+    toast('Saved', 'success', `${resolved.length} field(s) updated · Completeness: ${res.completeness}%`);
     await loadProject(currentId);
     loadList();
   } catch(err){
-    toast('Error al guardar','error', err.message);
-    btn.textContent = 'Guardar cambios';
+    toast('Failed to save','error', err.message);
+    btn.textContent = 'Save changes';
     btn.disabled = false;
   }
 }
@@ -985,7 +1015,7 @@ async function resolveNote(noteIndex, constraint){
   if(!input) return;
   const solution = input.value.trim();
   if(!solution){
-    toast('Rellena la solución antes de resolver','warning');
+    toast('Enter the solution before resolving','warning');
     return;
   }
   const btn = input.nextElementSibling;
@@ -998,18 +1028,18 @@ async function resolveNote(noteIndex, constraint){
       body: JSON.stringify({note_index: noteIndex, constraint, proposed_solution: solution}),
     });
     const json = await resp.json();
-    if(!resp.ok) throw new Error(json.error || 'Error desconocido');
+    if(!resp.ok) throw new Error(json.error || 'Unknown error');
 
     const remaining = json.unresolved_remaining ?? 0;
-    toast('Nota resuelta','success',
+    toast('Note resolved','success',
       remaining > 0
-        ? `Quedan ${remaining} decisión(es) pendiente(s).`
-        : 'Todas las decisiones resueltas — ya puedes aprobar el proyecto.');
+        ? `${remaining} decision(s) still pending.`
+        : 'All decisions resolved — you can now approve the project.');
 
     await loadProject(currentId);
   } catch(err){
-    toast('Error al resolver nota','error', err.message);
-    if(btn){ btn.textContent='Resolver'; btn.disabled=false; }
+    toast('Failed to resolve note','error', err.message);
+    if(btn){ btn.textContent='Resolve'; btn.disabled=false; }
   }
 }
 
